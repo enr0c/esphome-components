@@ -1,3 +1,8 @@
+/*
+  Based on: https://github.com/weetmuts/wmbusmeters/blob/master/src/driver_hydrodigit.cc
+  Copyright (C) 2019-2022 Fredrik Öhrström (gpl-3.0-or-later)
+*/
+
 #pragma once
 
 #include "driver.h"
