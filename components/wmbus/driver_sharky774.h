@@ -1,5 +1,5 @@
 /*
-  Based on: https://github.com/weetmuts/wmbusmeters/blob/master/src/driver_vario451.cc
+  Based on: https://github.com/weetmuts/wmbusmeters/blob/master/src/driver_sharky774.cc
   Copyright (C) 2017-2022 Fredrik Öhrström (gpl-3.0-or-later)
 */
 
