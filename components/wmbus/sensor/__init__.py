@@ -87,11 +87,9 @@ CONFIG_SCHEMA = cv.Schema(
 async def to_code(config):
     if config[CONF_TYPE]:
         cg.add_platformio_option("build_src_filter", [f"+<**/wmbus/driver_{config[CONF_TYPE].lower()}.cpp>"])
-    var = cg.new_Pvariable(config[CONF_LISTENER_ID],
-                           config[CONF_METER_ID],
-                           config[CONF_TYPE].lower(),
-                           config[CONF_KEY])
     if config[CONF_METER_ID]:
+        wmbus = await cg.get_variable(config[CONF_WMBUS_ID])
+        cg.add(wmbus.register_wmbus_listener(config[CONF_METER_ID], config[CONF_TYPE].lower(), config[CONF_KEY]))
         for s in config.get(CONF_SENSORS, []):
             if CONF_UNIT_OF_MEASUREMENT not in s:
                 print(color(Fore.RED, f"unit_of_measurement not defined for sensor '{s[CONF_NAME]}'!"))
@@ -102,6 +100,4 @@ async def to_code(config):
                 field = s[CONF_NAME].lower()
             unit = s[CONF_UNIT_OF_MEASUREMENT]
             sens = await sensor.new_sensor(s)
-            cg.add(var.add_sensor(field, unit, sens))
-        wmbus = await cg.get_variable(config[CONF_WMBUS_ID])
-        cg.add(wmbus.register_wmbus_listener(var))
+            cg.add(wmbus.add_sensor(config[CONF_METER_ID], field, unit, sens))
