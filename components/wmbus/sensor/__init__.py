@@ -7,27 +7,6 @@ from esphome.const import (
     CONF_TYPE,
     CONF_KEY,
     CONF_NAME,
-    UNIT_DECIBEL_MILLIWATT,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    STATE_CLASS_MEASUREMENT,
-    UNIT_CUBIC_METER,
-    DEVICE_CLASS_WATER,
-    STATE_CLASS_TOTAL_INCREASING,
-    UNIT_KILOWATT_HOURS,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    STATE_CLASS_TOTAL,
-    UNIT_KILOWATT,
-    UNIT_EMPTY,
-    DEVICE_CLASS_EMPTY,
-    UNIT_CELSIUS,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_GAS,
-    UNIT_VOLT,
-    DEVICE_CLASS_VOLTAGE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    UNIT_SECOND,
-    DEVICE_CLASS_TIMESTAMP,
     CONF_UNIT_OF_MEASUREMENT,
 )
 
@@ -87,11 +66,9 @@ CONFIG_SCHEMA = cv.Schema(
 async def to_code(config):
     if config[CONF_TYPE]:
         cg.add_platformio_option("build_src_filter", [f"+<**/wmbus/driver_{config[CONF_TYPE].lower()}.cpp>"])
-    var = cg.new_Pvariable(config[CONF_LISTENER_ID],
-                           config[CONF_METER_ID],
-                           config[CONF_TYPE].lower(),
-                           config[CONF_KEY])
     if config[CONF_METER_ID]:
+        wmbus = await cg.get_variable(config[CONF_WMBUS_ID])
+        cg.add(wmbus.register_wmbus_listener(config[CONF_METER_ID], config[CONF_TYPE].lower(), config[CONF_KEY]))
         for s in config.get(CONF_SENSORS, []):
             if CONF_UNIT_OF_MEASUREMENT not in s:
                 print(color(Fore.RED, f"unit_of_measurement not defined for sensor '{s[CONF_NAME]}'!"))
@@ -102,6 +79,4 @@ async def to_code(config):
                 field = s[CONF_NAME].lower()
             unit = s[CONF_UNIT_OF_MEASUREMENT]
             sens = await sensor.new_sensor(s)
-            cg.add(var.add_sensor(field, unit, sens))
-        wmbus = await cg.get_variable(config[CONF_WMBUS_ID])
-        cg.add(wmbus.register_wmbus_listener(var))
+            cg.add(wmbus.add_sensor(config[CONF_METER_ID], field, unit, sens))
