@@ -289,6 +289,7 @@ constexpr int operator&(int lhs, PrintProperty rhs) {
 
 struct PrintProperties {
   PrintProperties(int x) : props_(x) {}
+  PrintProperties(PrintProperty p) : props_(static_cast<int>(p)) {}
 
   bool hasREQUIRED() { return props_ & static_cast<int>(PrintProperty::REQUIRED); }
   bool hasDEPRECATED() { return props_ & static_cast<int>(PrintProperty::DEPRECATED); }
