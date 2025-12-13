@@ -287,6 +287,11 @@ constexpr int operator&(int lhs, PrintProperty rhs) {
   return lhs & static_cast<int>(rhs);
 }
 
+// Support compound assignment for combining flags
+inline void operator|=(int &lhs, PrintProperty rhs) {
+  lhs |= static_cast<int>(rhs);
+}
+
 // Legacy unscoped flag aliases for existing driver code (avoid STATUS to prevent collision)
 constexpr int REQUIRED = static_cast<int>(PrintProperty::REQUIRED);
 constexpr int DEPRECATED = static_cast<int>(PrintProperty::DEPRECATED);
