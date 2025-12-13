@@ -39,7 +39,7 @@ namespace
         addStringFieldWithExtractorAndLookup(
             "status",
             "Status and error flags.",
-            DEFAULT_PRINT_PROPERTIES  | INCLUDE_TPL_STATUS,
+            DEFAULT_PRINT_PROPERTIES  | PrintProperty::INCLUDE_TPL_STATUS,
             FieldMatcher::build()
             .set(VIFRange::ErrorFlags),
             {
