@@ -287,6 +287,13 @@ constexpr int operator&(int lhs, PrintProperty rhs) {
   return lhs & static_cast<int>(rhs);
 }
 
+// Legacy unscoped flag aliases for existing driver code (avoid STATUS to prevent collision)
+constexpr int REQUIRED = static_cast<int>(PrintProperty::REQUIRED);
+constexpr int DEPRECATED = static_cast<int>(PrintProperty::DEPRECATED);
+constexpr int INCLUDE_TPL_STATUS = static_cast<int>(PrintProperty::INCLUDE_TPL_STATUS);
+constexpr int INJECT_INTO_STATUS = static_cast<int>(PrintProperty::INJECT_INTO_STATUS);
+constexpr int HIDE = static_cast<int>(PrintProperty::HIDE);
+
 struct PrintProperties {
   PrintProperties(int x) : props_(x) {}
   PrintProperties(PrintProperty p) : props_(static_cast<int>(p)) {}
