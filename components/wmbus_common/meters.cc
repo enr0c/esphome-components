@@ -2352,10 +2352,10 @@ PrintProperties toPrintProperties(std::string s) {
 
   int bits = 0;
   for (auto p : fields) {
-    bits |= static_cast<int>(toPrintProperty(p.c_str()));
+    bits |= toPrintProperty(p.c_str());
   }
 
-  return PrintProperties(bits);
+  return bits;
 }
 
 char available_meter_types_[2048];
