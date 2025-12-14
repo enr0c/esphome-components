@@ -37,25 +37,31 @@ CONFIG_SCHEMA = cv.Schema(
 
 class WMBusComponentManifest(ComponentManifest):
     exclude_drivers: set[str]
+    include_drivers: set[str]
 
     @property
     def resources(self):
-        # Build a set of filenames we want to exclude, e.g. {"driver_foo.cc"}
+        # Build sets for include/exclude decisions on driver files.
+        include_files = {f"driver_{name}.cc" for name in self.include_drivers}
         exclude_files = {f"driver_{name}.cc" for name in self.exclude_drivers}
 
-        # Some build systems may represent resources with absolute paths or different objects.
-        # Normalize to a file name and filter by suffix to be robust across Arduino/ESP-IDF.
-        normalized = []
+        filtered = []
         for fr in super().resources:
-            # `fr` can be a FileResource or similar; try to get its path/name.
             res = getattr(fr, "resource", fr)
-            # Convert to string; this should yield either a path or a filename.
             s = str(res)
-            # Extract the file name portion for matching.
             fname = Path(s).name
-            if not any(fname.endswith(excl) for excl in exclude_files):
-                normalized.append(fr)
-        resources = normalized
+            # Only gate files that look like driver_*.cc.
+            if fname.startswith("driver_") and fname.endswith(".cc"):
+                # Prefer explicit include: keep only selected drivers.
+                if fname in include_files and fname not in exclude_files:
+                    filtered.append(fr)
+                else:
+                    # Skip unselected drivers.
+                    continue
+            else:
+                # Non-driver files are always kept.
+                filtered.append(fr)
+        resources = filtered
 
         # Optional: emit a small hint in the manifest for troubleshooting.
         # This shows how many driver sources remain after filtering.
@@ -74,7 +80,10 @@ class WMBusComponentManifest(ComponentManifest):
 async def to_code(config):
     component = get_component("wmbus_common")
     component.__class__ = WMBusComponentManifest
-    component.exclude_drivers = AVAILABLE_DRIVERS - _registered_drivers
+    # Drivers explicitly selected by the user.
+    component.include_drivers = set(_registered_drivers)
+    # Exclude any others.
+    component.exclude_drivers = AVAILABLE_DRIVERS - component.include_drivers
 
     var = cg.new_Pvariable(config[CONF_ID], sorted(_registered_drivers))
     await cg.register_component(var, config)
