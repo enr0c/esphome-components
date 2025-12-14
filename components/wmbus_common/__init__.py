@@ -40,11 +40,27 @@ class WMBusComponentManifest(ComponentManifest):
 
     @property
     def resources(self):
+        # Build a set of filenames we want to exclude, e.g. {"driver_foo.cc"}
         exclude_files = {f"driver_{name}.cc" for name in self.exclude_drivers}
-        SOURCE_FILE_EXTENSIONS.add(".cc")
-        resources = [fr for fr in super(
-        ).resources if fr.resource not in exclude_files]
-        SOURCE_FILE_EXTENSIONS.discard(".cc")
+
+        # Some build systems may represent resources with absolute paths.
+        # Exclude by filename suffix to be robust across Arduino/ESP-IDF.
+        resources = [
+            fr for fr in super().resources
+            if not any(str(fr.resource).endswith(excl) for excl in exclude_files)
+        ]
+
+        # Optional: emit a small hint in the manifest for troubleshooting.
+        # This shows how many driver sources remain after filtering.
+        try:
+            from esphome.core import LOGGER  # noqa: F401
+            # Only log if LOGGER exists to avoid import issues in early phases.
+            LOGGER.info("wmbus_common: selected drivers=%s; excluded=%s; resources=%d",
+                       sorted(_registered_drivers), sorted(self.exclude_drivers), len(resources))
+            pass
+        except Exception:
+            pass
+
         return resources
 
 
