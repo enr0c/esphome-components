@@ -43,12 +43,19 @@ class WMBusComponentManifest(ComponentManifest):
         # Build a set of filenames we want to exclude, e.g. {"driver_foo.cc"}
         exclude_files = {f"driver_{name}.cc" for name in self.exclude_drivers}
 
-        # Some build systems may represent resources with absolute paths.
-        # Exclude by filename suffix to be robust across Arduino/ESP-IDF.
-        resources = [
-            fr for fr in super().resources
-            if not any(str(fr.resource).endswith(excl) for excl in exclude_files)
-        ]
+        # Some build systems may represent resources with absolute paths or different objects.
+        # Normalize to a file name and filter by suffix to be robust across Arduino/ESP-IDF.
+        normalized = []
+        for fr in super().resources:
+            # `fr` can be a FileResource or similar; try to get its path/name.
+            res = getattr(fr, "resource", fr)
+            # Convert to string; this should yield either a path or a filename.
+            s = str(res)
+            # Extract the file name portion for matching.
+            fname = Path(s).name
+            if not any(fname.endswith(excl) for excl in exclude_files):
+                normalized.append(fr)
+        resources = normalized
 
         # Optional: emit a small hint in the manifest for troubleshooting.
         # This shows how many driver sources remain after filtering.
