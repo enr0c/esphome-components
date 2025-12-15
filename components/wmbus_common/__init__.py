@@ -54,7 +54,12 @@ class WMBusComponentManifest(ComponentManifest):
                 driver_like = sorted([n for n in base_names if n.startswith('driver_') and n.endswith('.cc')])
                 LOGGER.info("wmbus_common: base_driver_candidates=%s", driver_like)
             except Exception:
-                pass
+                # As a fallback, print to stdout so it appears in HA build logs
+                try:
+                    print(f"wmbus_common: base_resources_count={len(base_names)}")
+                    print(f"wmbus_common: base_driver_candidates={driver_like}")
+                except Exception:
+                    pass
         finally:
             # Restore extension set to avoid side effects for other components
             SOURCE_FILE_EXTENSIONS.discard(".cc")
@@ -89,7 +94,13 @@ class WMBusComponentManifest(ComponentManifest):
             LOGGER.info("wmbus_common: included_driver_files=%s", included_driver_files)
             LOGGER.info("wmbus_common: filtered_resources_count=%d", len(filtered))
         except Exception:
-            pass
+            # Fallback to stdout prints if LOGGER is unavailable in this context
+            try:
+                print(f"wmbus_common: include_set={sorted(self.include_drivers)} exclude_set={sorted(self.exclude_drivers)}")
+                print(f"wmbus_common: included_driver_files={included_driver_files}")
+                print(f"wmbus_common: filtered_resources_count={len(filtered)}")
+            except Exception:
+                pass
 
         return filtered
 
@@ -106,7 +117,11 @@ async def to_code(config):
         LOGGER.info("wmbus_common: yaml_selected_drivers=%s", sorted(_registered_drivers))
         LOGGER.info("wmbus_common: available_drivers=%s", sorted(AVAILABLE_DRIVERS))
     except Exception:
-        pass
+        try:
+            print(f"wmbus_common: yaml_selected_drivers={sorted(_registered_drivers)}")
+            print(f"wmbus_common: available_drivers={sorted(AVAILABLE_DRIVERS)}")
+        except Exception:
+            pass
 
     var = cg.new_Pvariable(config[CONF_ID], sorted(_registered_drivers))
     await cg.register_component(var, config)
