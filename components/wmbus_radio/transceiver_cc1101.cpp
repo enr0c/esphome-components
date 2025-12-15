@@ -10,6 +10,48 @@ namespace wmbus_radio {
 
 static const char *const TAG = "cc1101";
 
+static void log_cc1101_snapshot_(CC1101Driver &driver, InternalGPIOPin *gdo0_pin, InternalGPIOPin *gdo2_pin,
+                                 const char *reason) {
+  const bool gdo0 = (gdo0_pin != nullptr) ? gdo0_pin->digital_read() : false;
+  const bool gdo2 = (gdo2_pin != nullptr) ? gdo2_pin->digital_read() : false;
+
+  const uint8_t marc = driver.read_status(CC1101Status::MARCSTATE);
+  const uint8_t rxbytes = driver.read_status(CC1101Status::RXBYTES);
+  const uint8_t txbytes = driver.read_status(CC1101Status::TXBYTES);
+  const uint8_t pktstatus = driver.read_status(CC1101Status::PKTSTATUS);
+  const uint8_t rssi = driver.read_status(CC1101Status::RSSI);
+  const uint8_t lqi = driver.read_status(CC1101Status::LQI);
+  const uint8_t freqest = driver.read_status(CC1101Status::FREQEST);
+  const uint8_t vco_vc_dac = driver.read_status(CC1101Status::VCO_VC_DAC);
+
+  const uint8_t iocfg2 = driver.read_register(CC1101Register::IOCFG2);
+  const uint8_t iocfg0 = driver.read_register(CC1101Register::IOCFG0);
+  const uint8_t fifothr = driver.read_register(CC1101Register::FIFOTHR);
+  const uint8_t pktctrl1 = driver.read_register(CC1101Register::PKTCTRL1);
+  const uint8_t pktctrl0 = driver.read_register(CC1101Register::PKTCTRL0);
+  const uint8_t pktlen = driver.read_register(CC1101Register::PKTLEN);
+  const uint8_t mcsm2 = driver.read_register(CC1101Register::MCSM2);
+  const uint8_t mcsm1 = driver.read_register(CC1101Register::MCSM1);
+  const uint8_t mcsm0 = driver.read_register(CC1101Register::MCSM0);
+  const uint8_t mdmcfg2 = driver.read_register(CC1101Register::MDMCFG2);
+  const uint8_t sync1 = driver.read_register(CC1101Register::SYNC1);
+  const uint8_t sync0 = driver.read_register(CC1101Register::SYNC0);
+  const uint8_t freq2 = driver.read_register(CC1101Register::FREQ2);
+  const uint8_t freq1 = driver.read_register(CC1101Register::FREQ1);
+  const uint8_t freq0 = driver.read_register(CC1101Register::FREQ0);
+
+  ESP_LOGW(TAG,
+           "CC1101 snapshot (%s): MARC=0x%02X RXBYTES=0x%02X (n=%u ovf=%u) TXBYTES=0x%02X (n=%u) PKTSTATUS=0x%02X "
+           "RSSI=0x%02X LQI=0x%02X FREQEST=0x%02X VCO_VC_DAC=0x%02X GDO0=%d GDO2=%d",
+           reason, marc, rxbytes, rxbytes & 0x7F, (rxbytes & 0x80) ? 1 : 0, txbytes, txbytes & 0x7F, pktstatus, rssi, lqi,
+           freqest, vco_vc_dac, gdo0, gdo2);
+  ESP_LOGW(TAG,
+           "CC1101 regs: IOCFG2=0x%02X IOCFG0=0x%02X FIFOTHR=0x%02X PKTCTRL1=0x%02X PKTCTRL0=0x%02X PKTLEN=0x%02X "
+           "MCSM2=0x%02X MCSM1=0x%02X MCSM0=0x%02X MDMCFG2=0x%02X SYNC=0x%02X%02X FREQ=0x%02X%02X%02X",
+           iocfg2, iocfg0, fifothr, pktctrl1, pktctrl0, pktlen, mcsm2, mcsm1, mcsm0, mdmcfg2, sync1, sync0, freq2, freq1,
+           freq0);
+}
+
 CC1101::CC1101()
     : gdo0_pin_(nullptr)
     , gdo2_pin_(nullptr)
@@ -237,11 +279,21 @@ optional<uint8_t> CC1101::read() {
       uint8_t rxbytes_status = this->driver_->read_status(CC1101Status::RXBYTES);
       if (rxbytes_status & 0x80) {
         ESP_LOGW(TAG, "FIFO overflow while waiting for sync, flushing");
-        this->rx_state_ = RxLoopState::INIT_RX;
+        log_cc1101_snapshot_(*this->driver_, this->gdo0_pin_, this->gdo2_pin_, "wait_for_sync overflow");
+        this->init_rx_();
+        return {};
+      }
+
+      // If RX FIFO is accumulating data but we never see sync (GDO2), we may be receiving noise or
+      // the GDO2 wiring/config is wrong. Flush early to avoid overflow and log when it starts happening.
+      const uint8_t bytes_in_fifo = rxbytes_status & 0x7F;
+      if (bytes_in_fifo >= 24) {
+        ESP_LOGD(TAG, "RX FIFO accumulating without sync (n=%u), flushing", bytes_in_fifo);
+        log_cc1101_snapshot_(*this->driver_, this->gdo0_pin_, this->gdo2_pin_, "wait_for_sync fifo accumulating");
+        this->init_rx_();
         return {};
       }
     }
-    return {};
     return {};
   case RxLoopState::WAIT_FOR_DATA:
     if (millis() - this->sync_time_ > this->max_wait_time_) {
@@ -297,19 +349,43 @@ void CC1101::init_rx_() {
   this->length_mode_ = LengthMode::INFINITE;
   this->wmbus_mode_ = WMBusMode::UNKNOWN;
   this->wmbus_block_ = WMBusBlock::UNKNOWN;
+
+  // Enter RX and verify MARCSTATE transitions. If the chip reports SLEEP (0x00) or RX_OVERFLOW (0x11),
+  // attempt a minimal recovery sequence and log a snapshot.
   this->driver_->send_strobe(CC1101Strobe::SRX);
-  uint8_t marc_state;
+  delay(1);
+  uint8_t marc_state = 0xFF;
+  uint8_t first_marc_state = 0xFF;
   bool rx_entered = false;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 50; i++) {
     marc_state = this->driver_->read_status(CC1101Status::MARCSTATE);
+    if (i == 0)
+      first_marc_state = marc_state;
+
     if (marc_state == static_cast<uint8_t>(CC1101State::RX)) {
       rx_entered = true;
       break;
     }
+
+    if (marc_state == static_cast<uint8_t>(CC1101State::RX_OVERFLOW)) {
+      ESP_LOGD(TAG, "MARCSTATE indicates RX overflow during RX entry, flushing and retrying");
+      this->driver_->send_strobe(CC1101Strobe::SFRX);
+      delay(1);
+      this->driver_->send_strobe(CC1101Strobe::SRX);
+    } else if (marc_state == static_cast<uint8_t>(CC1101State::SLEEP)) {
+      // If we ever read SLEEP here, it's a strong hint of SPI/chip-select issues or unintended powerdown.
+      // Try to wake to IDLE then re-enter RX.
+      this->driver_->send_strobe(CC1101Strobe::SIDLE);
+      delay(1);
+      this->driver_->send_strobe(CC1101Strobe::SRX);
+    }
+
     delay(1);
   }
   if (!rx_entered) {
-    ESP_LOGW(TAG, "Failed to enter RX mode! MARCSTATE: 0x%02X (expected: 0x0D)", marc_state);
+    ESP_LOGW(TAG, "Failed to enter RX mode! MARCSTATE first=0x%02X last=0x%02X (expected RX=0x0D)", first_marc_state,
+             marc_state);
+    log_cc1101_snapshot_(*this->driver_, this->gdo0_pin_, this->gdo2_pin_, "init_rx failed");
   }
   this->rx_state_ = RxLoopState::WAIT_FOR_SYNC;
 }

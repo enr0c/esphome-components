@@ -129,6 +129,7 @@ async def to_code(config):
         selected = ",".join(sorted(_registered_drivers))
         if selected:
             cg.add_define("ESPHOME_WMBUS_INCLUDE_DRIVERS", selected)
+            print(f"selected drivers: {selected}")
         # Register a pre-build script to physically exclude non-selected drivers.
         # Use an absolute path to avoid relying on ESP32's extra_build_files copy step.
         script_path = os.path.join(os.path.dirname(__file__), "filter_wmbus_drivers.py")
