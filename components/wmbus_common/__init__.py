@@ -41,12 +41,20 @@ class WMBusComponentManifest(ComponentManifest):
 
     @property
     def resources(self):
+        # Allow loader to pick up C++ sources with .cc extension
+        SOURCE_FILE_EXTENSIONS.add(".cc")
+        try:
+            base_resources = list(super().resources)
+        finally:
+            # Restore extension set to avoid side effects for other components
+            SOURCE_FILE_EXTENSIONS.discard(".cc")
+
         # Build include/exclude filename sets for driver sources
         include_files = {f"driver_{name}.cc" for name in self.include_drivers}
         exclude_files = {f"driver_{name}.cc" for name in self.exclude_drivers}
 
         filtered = []
-        for fr in super().resources:
+        for fr in base_resources:
             res = getattr(fr, "resource", fr)
             s = str(res)
             fname = Path(s).name
