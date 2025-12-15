@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
+import logging
 
 import esphome.config_validation as cv
 from esphome import codegen as cg
 from esphome.const import CONF_ID, SOURCE_FILE_EXTENSIONS
-from esphome.core import LOGGER
+
+LOGGER = logging.getLogger(__name__)
 
 CODEOWNERS = ["@SzczepanLeon", "@kubasaw"]
 CONF_DRIVERS = "drivers"
