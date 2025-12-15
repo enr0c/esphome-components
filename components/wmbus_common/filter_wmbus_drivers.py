@@ -5,29 +5,25 @@ import os
 from glob import glob
 
 
-def _get_include_list_from_defines(env):
-    # Prefer a dedicated project option injected by ESPHome codegen.
+TAG = "wmbus_common.pre"
+
+
+def _log(level: str, message: str):
+    print(f"{TAG}: {level} {message}")
+
+
+def _get_selected_drivers(env) -> set[str]:
+    # Primary source: dedicated project option injected by ESPHome codegen.
     try:
-        opt = env.GetProjectOption("custom_wmbus_include_drivers")
+        raw = env.GetProjectOption("custom_wmbus_include_drivers")
     except Exception:
-        opt = None
-    if opt:
-        opt = str(opt).strip().strip('"').strip("'")
-        return {name.strip() for name in opt.split(",") if name.strip()}
+        raw = None
 
-    # Fallback: try CPPDEFINES if the option is missing.
-    defines = env.get("CPPDEFINES", [])
-    for d in defines:
-        if isinstance(d, tuple) and len(d) == 2 and d[0] == "ESPHOME_WMBUS_INCLUDE_DRIVERS":
-            val = d[1]
-            if isinstance(val, str):
-                val = val.strip().strip('"').strip("'")
-            return {name.strip() for name in str(val).split(",") if name.strip()}
-        if isinstance(d, str) and d.startswith("ESPHOME_WMBUS_INCLUDE_DRIVERS="):
-            val = d.split("=", 1)[1].strip().strip('"').strip("'")
-            return {name.strip() for name in val.split(",") if name.strip()}
+    if not raw:
+        return set()
 
-    return set()
+    raw = str(raw).strip().strip('"').strip("'")
+    return {name.strip() for name in raw.split(",") if name.strip()}
 
 
 def _rename(path_from, path_to):
@@ -43,48 +39,41 @@ def _rename(path_from, path_to):
 project_src_dir = env.subst("$PROJECT_SRC_DIR")
 src_dir = os.path.join(project_src_dir, "esphome", "components", "wmbus_common")
 
-included = _get_include_list_from_defines(env)
-include_files = {f"driver_{name}.cc" for name in included}
-
 if not os.path.isdir(src_dir):
-    print(f"wmbus_common.pre: src dir not found: {src_dir}")
-else:
-    print(f"wmbus_common.pre: filtering drivers in {src_dir}")
+    _log("WARN", f"src dir not found: {src_dir}")
+    raise SystemExit(0)
 
-    # If no selection was provided, keep everything as-is.
-    if not included:
-        print("wmbus_common.pre: no selected drivers (leaving all driver_*.cc as-is)")
-        raise SystemExit(0)
+selected = _get_selected_drivers(env)
+if not selected:
+    _log("INFO", "no selected drivers; leaving all driver_*.cc as-is")
+    raise SystemExit(0)
 
-    # Exclude all driver_*.cc not in include_files by renaming to .cc.off
-    excluded = []
-    kept = []
+_log("INFO", f"filtering drivers in {src_dir}")
 
-    off_before = glob(os.path.join(src_dir, "driver_*.cc.off"))
-    restored = []
+include_files = {f"driver_{name}.cc" for name in selected}
+glob_off = os.path.join(src_dir, "driver_*.cc.off")
+glob_cc = os.path.join(src_dir, "driver_*.cc")
 
-    # Restore any previously excluded file that is now included
-    for off_path in glob(os.path.join(src_dir, "driver_*.cc.off")):
-        base = os.path.basename(off_path)
-        orig = base[:-4]  # strip .off
-        if orig in include_files:
-            if _rename(off_path, os.path.join(src_dir, orig)):
-                restored.append(orig)
-    # Now process all .cc files
-    for path in glob(os.path.join(src_dir, "driver_*.cc")):
-        base = os.path.basename(path)
-        if base in include_files:
-            kept.append(base)
-        else:
-            off_path = path + ".off"
-            if _rename(path, off_path):
-                excluded.append(base)
+off_before = len(glob(glob_off))
+restored_count = 0
+for off_path in glob(glob_off):
+    base = os.path.basename(off_path)[:-4]  # strip .off
+    if base in include_files and _rename(off_path, os.path.join(src_dir, base)):
+        restored_count += 1
 
-    # Note: if build dir is reused, most drivers may already be .cc.off, so "excluded" can be empty.
-    already_off = max(0, len(off_before) - len(restored))
-    print(
-        "wmbus_common.pre: include=", sorted(list(included)),
-        " kept=", sorted(kept),
-        " excluded=", sorted(excluded),
-        " already_off=", already_off,
-    )
+kept = []
+excluded_now = 0
+for path in glob(glob_cc):
+    base = os.path.basename(path)
+    if base in include_files:
+        kept.append(base)
+        continue
+    if _rename(path, path + ".off"):
+        excluded_now += 1
+
+# If the build dir is reused, many drivers can already be .cc.off, so excluded_now may be 0.
+already_off = max(0, off_before - restored_count)
+_log(
+    "INFO",
+    f"selected_drivers={sorted(selected)} kept={sorted(kept)} excluded_now={excluded_now} already_off={already_off}",
+)
