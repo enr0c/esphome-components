@@ -129,12 +129,11 @@ async def to_code(config):
         selected = ",".join(sorted(_registered_drivers))
         if selected:
             cg.add_define("ESPHOME_WMBUS_INCLUDE_DRIVERS", selected)
-            # Also inject into PlatformIO build flags so extra_scripts can read it reliably
-            # (cg.add_define may not always end up in CPPDEFINES at pre-script time).
-            cg.add_platformio_option(
-                "build_flags",
-                [f'-DESPHOME_WMBUS_INCLUDE_DRIVERS=\\"{selected}\\"'],
-            )
+            # Ensure PlatformIO sees it early (pre extra_script) and without clobbering other flags.
+            # We don't need quotes here; the pre-script just splits on commas.
+            cg.add_build_flag(f"-DESPHOME_WMBUS_INCLUDE_DRIVERS={selected}")
+            # Also publish as a dedicated project option; this is the most reliable place for extra_scripts.
+            cg.add_platformio_option("custom_wmbus_include_drivers", selected)
             print(f"selected drivers: {selected}")
         # Register a pre-build script to physically exclude non-selected drivers.
         # Use an absolute path to avoid relying on ESP32's extra_build_files copy step.
