@@ -129,9 +129,6 @@ async def to_code(config):
         selected = ",".join(sorted(_registered_drivers))
         if selected:
             cg.add_define("ESPHOME_WMBUS_INCLUDE_DRIVERS", selected)
-            # Ensure PlatformIO sees it early (pre extra_script) and without clobbering other flags.
-            # We don't need quotes here; the pre-script just splits on commas.
-            cg.add_build_flag(f"-DESPHOME_WMBUS_INCLUDE_DRIVERS={selected}")
             # Also publish as a dedicated project option; this is the most reliable place for extra_scripts.
             cg.add_platformio_option("custom_wmbus_include_drivers", selected)
             print(f"selected drivers: {selected}")
