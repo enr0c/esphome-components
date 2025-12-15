@@ -270,6 +270,16 @@ optional<uint8_t> CC1101::read() {
     return {};
   case RxLoopState::WAIT_FOR_SYNC:
     if (this->wait_for_sync_()) {
+      // If SPI is failing (0xFF reads), GDO may be floating or the radio may be unresponsive.
+      // Don't treat this as a real sync edge; restart RX and let the setup/driver warnings guide wiring fixes.
+      const uint8_t marc = this->driver_->read_status(CC1101Status::MARCSTATE);
+      const uint8_t rxbytes = this->driver_->read_status(CC1101Status::RXBYTES);
+      if (marc == 0xFF || rxbytes == 0xFF) {
+        ESP_LOGW(TAG, "GDO2 indicates sync but SPI reads are 0xFF; ignoring and restarting RX");
+        log_cc1101_snapshot_(*this->driver_, this->gdo0_pin_, this->gdo2_pin_, "sync while spi failing");
+        this->init_rx_();
+        return {};
+      }
       ESP_LOGD(TAG, "Sync detected");
       this->rx_state_ = RxLoopState::WAIT_FOR_DATA;
       this->sync_time_ = millis();

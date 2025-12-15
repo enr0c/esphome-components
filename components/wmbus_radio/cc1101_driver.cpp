@@ -9,6 +9,22 @@ static const char *const TAG = "cc1101_driver";
 static constexpr uint8_t CC1101_SPI_MAX_RETRIES = 5;
 static constexpr uint32_t CC1101_SPI_RETRY_DELAY_US = 50;
 
+static bool should_log_spi_ff_warning_() {
+  static uint32_t last_warn_ms = 0;
+  static uint32_t suppressed = 0;
+  const uint32_t now = millis();
+  if (now - last_warn_ms >= 1000) {
+    last_warn_ms = now;
+    if (suppressed > 0) {
+      ESP_LOGW(TAG, "suppressed %u repeated SPI 0xFF warnings", suppressed);
+      suppressed = 0;
+    }
+    return true;
+  }
+  suppressed++;
+  return false;
+}
+
 uint8_t CC1101Driver::read_register(CC1101Register reg) {
   uint8_t addr = static_cast<uint8_t>(reg) | CC1101_READ_SINGLE;
   uint8_t value = 0;
@@ -29,7 +45,9 @@ uint8_t CC1101Driver::read_register(CC1101Register reg) {
     delayMicroseconds(CC1101_SPI_RETRY_DELAY_US);
   }
 
-  ESP_LOGW(TAG, "read_register returned status 0xFF reg=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(reg));
+  if (should_log_spi_ff_warning_()) {
+    ESP_LOGW(TAG, "read_register returned status 0xFF reg=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(reg));
+  }
   return value;
 }
 
@@ -62,7 +80,9 @@ uint8_t CC1101Driver::read_status(CC1101Status status) {
     delayMicroseconds(CC1101_SPI_RETRY_DELAY_US);
   }
 
-  ESP_LOGW(TAG, "read_status returned status 0xFF status=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(status));
+  if (should_log_spi_ff_warning_()) {
+    ESP_LOGW(TAG, "read_status returned status 0xFF status=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(status));
+  }
   return value;
 }
 
@@ -112,7 +132,9 @@ uint8_t CC1101Driver::send_strobe(CC1101Strobe strobe) {
     delayMicroseconds(CC1101_SPI_RETRY_DELAY_US);
   }
 
-  ESP_LOGW(TAG, "send_strobe returned 0xFF strobe=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(strobe));
+  if (should_log_spi_ff_warning_()) {
+    ESP_LOGW(TAG, "send_strobe returned 0xFF strobe=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(strobe));
+  }
   return status;
 }
 
