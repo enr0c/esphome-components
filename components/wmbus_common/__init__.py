@@ -37,21 +37,48 @@ CONFIG_SCHEMA = cv.Schema(
 
 class WMBusComponentManifest(ComponentManifest):
     exclude_drivers: set[str]
+    include_drivers: set[str]
 
     @property
     def resources(self):
+        # Build include/exclude filename sets for driver sources
+        include_files = {f"driver_{name}.cc" for name in self.include_drivers}
         exclude_files = {f"driver_{name}.cc" for name in self.exclude_drivers}
-        SOURCE_FILE_EXTENSIONS.add(".cc")
-        resources = [fr for fr in super(
-        ).resources if fr.resource not in exclude_files]
-        SOURCE_FILE_EXTENSIONS.discard(".cc")
-        return resources
+
+        filtered = []
+        for fr in super().resources:
+            res = getattr(fr, "resource", fr)
+            s = str(res)
+            fname = Path(s).name
+            if fname.startswith("driver_") and fname.endswith(".cc"):
+                # Only include selected drivers and exclude the rest
+                if fname in include_files and fname not in exclude_files:
+                    filtered.append(fr)
+            else:
+                # Keep all non-driver files
+                filtered.append(fr)
+
+        # Debug info to verify which drivers are included
+        try:
+            from esphome.core import LOGGER
+            LOGGER.info(
+                "wmbus_common: selected=%s excluded=%s included_driver_files=%s",
+                sorted(self.include_drivers),
+                sorted(self.exclude_drivers),
+                sorted([Path(str(getattr(fr, 'resource', fr))).name for fr in filtered
+                        if Path(str(getattr(fr, 'resource', fr))).name.startswith('driver_')])
+            )
+        except Exception:
+            pass
+
+        return filtered
 
 
 async def to_code(config):
     component = get_component("wmbus_common")
     component.__class__ = WMBusComponentManifest
-    component.exclude_drivers = AVAILABLE_DRIVERS - _registered_drivers
+    component.include_drivers = set(_registered_drivers)
+    component.exclude_drivers = AVAILABLE_DRIVERS - component.include_drivers
 
     var = cg.new_Pvariable(config[CONF_ID], sorted(_registered_drivers))
     await cg.register_component(var, config)
