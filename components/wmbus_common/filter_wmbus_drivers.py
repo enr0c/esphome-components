@@ -16,6 +16,21 @@ def _get_include_list_from_defines(env):
         if isinstance(d, str) and d.startswith("ESPHOME_WMBUS_INCLUDE_DRIVERS="):
             include_val = d.split("=", 1)[1]
             break
+
+    # In some ESPHome/PlatformIO flows, custom defines are only present in build_flags
+    # at pre-script time (not yet expanded into CPPDEFINES).
+    if include_val is None:
+        try:
+            build_flags = env.GetProjectOption("build_flags")
+        except Exception:
+            build_flags = None
+        if build_flags:
+            # build_flags can be a multiline string
+            for token in str(build_flags).replace("\n", " ").split():
+                if token.startswith("-DESPHOME_WMBUS_INCLUDE_DRIVERS="):
+                    include_val = token.split("=", 1)[1]
+                    break
+
     if not include_val:
         return set()
     if isinstance(include_val, str):
