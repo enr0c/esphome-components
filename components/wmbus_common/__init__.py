@@ -45,6 +45,16 @@ class WMBusComponentManifest(ComponentManifest):
         SOURCE_FILE_EXTENSIONS.add(".cc")
         try:
             base_resources = list(super().resources)
+            # Verbose logging of all discovered resources before filtering
+            try:
+                from esphome.core import LOGGER
+                base_names = [Path(str(getattr(fr, 'resource', fr))).name for fr in base_resources]
+                LOGGER.info("wmbus_common: base_resources_count=%d", len(base_names))
+                # Log driver-looking files separately for easier inspection
+                driver_like = sorted([n for n in base_names if n.startswith('driver_') and n.endswith('.cc')])
+                LOGGER.info("wmbus_common: base_driver_candidates=%s", driver_like)
+            except Exception:
+                pass
         finally:
             # Restore extension set to avoid side effects for other components
             SOURCE_FILE_EXTENSIONS.discard(".cc")
@@ -69,13 +79,15 @@ class WMBusComponentManifest(ComponentManifest):
         # Debug info to verify which drivers are included
         try:
             from esphome.core import LOGGER
-            LOGGER.info(
-                "wmbus_common: selected=%s excluded=%s included_driver_files=%s",
-                sorted(self.include_drivers),
-                sorted(self.exclude_drivers),
-                sorted([Path(str(getattr(fr, 'resource', fr))).name for fr in filtered
-                        if Path(str(getattr(fr, 'resource', fr))).name.startswith('driver_')])
-            )
+            included_driver_files = sorted([
+                Path(str(getattr(fr, 'resource', fr))).name for fr in filtered
+                if Path(str(getattr(fr, 'resource', fr))).name.startswith('driver_') and
+                   Path(str(getattr(fr, 'resource', fr))).name.endswith('.cc')
+            ])
+            LOGGER.info("wmbus_common: include_set=%s exclude_set=%s",
+                        sorted(self.include_drivers), sorted(self.exclude_drivers))
+            LOGGER.info("wmbus_common: included_driver_files=%s", included_driver_files)
+            LOGGER.info("wmbus_common: filtered_resources_count=%d", len(filtered))
         except Exception:
             pass
 
@@ -87,6 +99,14 @@ async def to_code(config):
     component.__class__ = WMBusComponentManifest
     component.include_drivers = set(_registered_drivers)
     component.exclude_drivers = AVAILABLE_DRIVERS - component.include_drivers
+
+    # Log what the validator captured from YAML
+    try:
+        from esphome.core import LOGGER
+        LOGGER.info("wmbus_common: yaml_selected_drivers=%s", sorted(_registered_drivers))
+        LOGGER.info("wmbus_common: available_drivers=%s", sorted(AVAILABLE_DRIVERS))
+    except Exception:
+        pass
 
     var = cg.new_Pvariable(config[CONF_ID], sorted(_registered_drivers))
     await cg.register_component(var, config)
