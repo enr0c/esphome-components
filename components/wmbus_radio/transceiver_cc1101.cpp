@@ -110,11 +110,11 @@ void CC1101::setup() {
   ESP_LOGCONFIG(TAG, "Setting up CC1101...");
   if (this->gdo0_pin_ != nullptr) {
     this->gdo0_pin_->setup();
-    this->gdo0_pin_->pin_mode(gpio::FLAG_INPUT);
+    this->gdo0_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLDOWN);
   }
   if (this->gdo2_pin_ != nullptr) {
     this->gdo2_pin_->setup();
-    this->gdo2_pin_->pin_mode(gpio::FLAG_INPUT);
+    this->gdo2_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLDOWN);
   }
   this->common_setup();
   this->driver_ = std::make_unique<CC1101Driver>(this);
@@ -397,6 +397,12 @@ bool CC1101::wait_for_sync_() {
 }
 bool CC1101::wait_for_data_() {
   uint8_t rxbytes_status = this->driver_->read_status(CC1101Status::RXBYTES);
+  if (rxbytes_status == 0xFF) {
+    ESP_LOGW(TAG, "SPI read failed (RXBYTES=0xFF) while reading header; restarting RX");
+    log_cc1101_snapshot_(*this->driver_, this->gdo0_pin_, this->gdo2_pin_, "wait_for_data spi fail");
+    this->rx_state_ = RxLoopState::INIT_RX;
+    return false;
+  }
   if (rxbytes_status & 0x80) {
     ESP_LOGW(TAG, "RX FIFO overflow while reading header");
     this->rx_state_ = RxLoopState::INIT_RX;
