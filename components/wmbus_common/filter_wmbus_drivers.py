@@ -9,15 +9,6 @@ import sys
 
 LOGGER = logging.getLogger(__name__)
 
-# Make sure logs show up in ESPHome/PlatformIO output.
-if not LOGGER.handlers:
-    _handler = logging.StreamHandler(sys.stdout)
-    _handler.setFormatter(logging.Formatter("wmbus_common.pre: %(levelname)s %(message)s"))
-    LOGGER.addHandler(_handler)
-    LOGGER.setLevel(logging.INFO)
-    LOGGER.propagate = False
-
-
 def _get_selected_drivers(env) -> set[str]:
     # Primary source: dedicated project option injected by ESPHome codegen.
     try:
