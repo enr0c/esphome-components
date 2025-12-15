@@ -3,6 +3,12 @@ from esphome.const import SOURCE_FILE_EXTENSIONS, CONF_ID
 from esphome.loader import get_component, ComponentManifest
 from esphome import codegen as cg
 from pathlib import Path
+import os
+try:
+    # Reuse ESPHome helper to register pre/post extra scripts
+    from esphome.components.esp32 import add_extra_script  # type: ignore
+except Exception:
+    add_extra_script = None
 
 CODEOWNERS = ["@SzczepanLeon", "@kubasaw"]
 CONF_DRIVERS = "drivers"
@@ -122,6 +128,21 @@ async def to_code(config):
             print(f"wmbus_common: available_drivers={sorted(AVAILABLE_DRIVERS)}")
         except Exception:
             pass
+
+    # Expose selected drivers to the build system and add a pre-build filter script
+    try:
+        selected = ",".join(sorted(_registered_drivers))
+        if selected:
+            cg.add_define("ESPHOME_WMBUS_INCLUDE_DRIVERS", selected)
+        # Register a pre-build script to physically exclude non-selected drivers
+        if add_extra_script is not None:
+            script_path = os.path.join(os.path.dirname(__file__), "filter_wmbus_drivers.py.script")
+            # Only register if the script exists in our component
+            if os.path.exists(script_path):
+                add_extra_script("pre", "filter_wmbus_drivers.py", script_path)
+    except Exception:
+        # Best-effort; build will proceed even if script/define cannot be added
+        pass
 
     var = cg.new_Pvariable(config[CONF_ID], sorted(_registered_drivers))
     await cg.register_component(var, config)
