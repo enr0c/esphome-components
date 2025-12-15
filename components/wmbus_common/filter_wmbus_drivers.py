@@ -3,13 +3,19 @@ Import("env")  # noqa
 
 import os
 from glob import glob
+import logging
+import sys
 
 
-TAG = "wmbus_common.pre"
+LOGGER = logging.getLogger(__name__)
 
-
-def _log(level: str, message: str):
-    print(f"{TAG}: {level} {message}")
+# Make sure logs show up in ESPHome/PlatformIO output.
+if not LOGGER.handlers:
+    _handler = logging.StreamHandler(sys.stdout)
+    _handler.setFormatter(logging.Formatter("wmbus_common.pre: %(levelname)s %(message)s"))
+    LOGGER.addHandler(_handler)
+    LOGGER.setLevel(logging.INFO)
+    LOGGER.propagate = False
 
 
 def _get_selected_drivers(env) -> set[str]:
@@ -40,15 +46,15 @@ project_src_dir = env.subst("$PROJECT_SRC_DIR")
 src_dir = os.path.join(project_src_dir, "esphome", "components", "wmbus_common")
 
 if not os.path.isdir(src_dir):
-    _log("WARN", f"src dir not found: {src_dir}")
+    LOGGER.warning("src dir not found: %s", src_dir)
     raise SystemExit(0)
 
 selected = _get_selected_drivers(env)
 if not selected:
-    _log("INFO", "no selected drivers; leaving all driver_*.cc as-is")
+    LOGGER.info("no selected drivers; leaving all driver_*.cc as-is")
     raise SystemExit(0)
 
-_log("INFO", f"filtering drivers in {src_dir}")
+LOGGER.info("filtering drivers in %s", src_dir)
 
 include_files = {f"driver_{name}.cc" for name in selected}
 glob_off = os.path.join(src_dir, "driver_*.cc.off")
@@ -73,7 +79,10 @@ for path in glob(glob_cc):
 
 # If the build dir is reused, many drivers can already be .cc.off, so excluded_now may be 0.
 already_off = max(0, off_before - restored_count)
-_log(
-    "INFO",
-    f"selected_drivers={sorted(selected)} kept={sorted(kept)} excluded_now={excluded_now} already_off={already_off}",
+LOGGER.info(
+    "selected_drivers=%s kept=%s excluded_now=%d already_off=%d",
+    sorted(selected),
+    sorted(kept),
+    excluded_now,
+    already_off,
 )
