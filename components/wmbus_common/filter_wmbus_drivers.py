@@ -31,19 +31,31 @@ def _rename(path_from, path_to):
         return False
 
 
-# Determine the path where PlatformIO copies sources for compilation
-build_dir = env.subst("$BUILD_DIR")
-src_dir = os.path.join(build_dir, "src", "esphome", "components", "wmbus_common")
+# Determine the path where PlatformIO compiles sources from.
+# For ESPHome, component sources live under $PROJECT_SRC_DIR/esphome/components/<component>.
+project_src_dir = env.subst("$PROJECT_SRC_DIR")
+src_dir = os.path.join(project_src_dir, "esphome", "components", "wmbus_common")
 
 included = _get_include_list_from_defines(env)
 include_files = {f"driver_{name}.cc" for name in included}
 
 if not os.path.isdir(src_dir):
     print(f"wmbus_common.pre: src dir not found: {src_dir}")
+    try:
+        print(
+            "wmbus_common.pre: PROJECT_SRC_DIR=", project_src_dir,
+            " BUILD_DIR=", env.subst("$BUILD_DIR"),
+        )
+    except Exception:
+        pass
 else:
+    print(f"wmbus_common.pre: filtering drivers in {src_dir}")
     # Exclude all driver_*.cc not in include_files by renaming to .cc.off
     excluded = []
     kept = []
+    if not included:
+        print("wmbus_common.pre: no selected drivers (leaving all driver_*.cc as-is)")
+        raise SystemExit(0)
     # Restore any previously excluded file that is now included
     for off_path in glob(os.path.join(src_dir, "driver_*.cc.off")):
         base = os.path.basename(off_path)
