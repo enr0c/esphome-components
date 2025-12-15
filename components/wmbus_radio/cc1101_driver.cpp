@@ -6,15 +6,30 @@ namespace wmbus_radio {
 
 static const char *const TAG = "cc1101_driver";
 
+static constexpr uint8_t CC1101_SPI_MAX_RETRIES = 5;
+static constexpr uint32_t CC1101_SPI_RETRY_DELAY_US = 50;
+
 uint8_t CC1101Driver::read_register(CC1101Register reg) {
   uint8_t addr = static_cast<uint8_t>(reg) | CC1101_READ_SINGLE;
   uint8_t value = 0;
+  uint8_t status_byte = 0xFF;
 
-  this->spi_->enable();
-  this->spi_->transfer_byte(addr);
-  value = this->spi_->transfer_byte(0x00);
-  this->spi_->disable();
+  for (uint8_t attempt = 0; attempt < CC1101_SPI_MAX_RETRIES; attempt++) {
+    this->spi_->enable();
+    status_byte = this->spi_->transfer_byte(addr);
+    value = this->spi_->transfer_byte(0x00);
+    this->spi_->disable();
 
+    if (status_byte != 0xFF) {
+      if (attempt > 0) {
+        ESP_LOGV(TAG, "read_register retry ok reg=0x%02X attempts=%u", static_cast<uint8_t>(reg), attempt + 1);
+      }
+      return value;
+    }
+    delayMicroseconds(CC1101_SPI_RETRY_DELAY_US);
+  }
+
+  ESP_LOGW(TAG, "read_register returned status 0xFF reg=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(reg));
   return value;
 }
 
@@ -30,12 +45,24 @@ void CC1101Driver::write_register(CC1101Register reg, uint8_t value) {
 uint8_t CC1101Driver::read_status(CC1101Status status) {
   uint8_t addr = static_cast<uint8_t>(status) | CC1101_READ_BURST;
   uint8_t value = 0;
+  uint8_t status_byte = 0xFF;
 
-  this->spi_->enable();
-  this->spi_->transfer_byte(addr);
-  value = this->spi_->transfer_byte(0x00);
-  this->spi_->disable();
+  for (uint8_t attempt = 0; attempt < CC1101_SPI_MAX_RETRIES; attempt++) {
+    this->spi_->enable();
+    status_byte = this->spi_->transfer_byte(addr);
+    value = this->spi_->transfer_byte(0x00);
+    this->spi_->disable();
 
+    if (status_byte != 0xFF) {
+      if (attempt > 0) {
+        ESP_LOGV(TAG, "read_status retry ok status=0x%02X attempts=%u", static_cast<uint8_t>(status), attempt + 1);
+      }
+      return value;
+    }
+    delayMicroseconds(CC1101_SPI_RETRY_DELAY_US);
+  }
+
+  ESP_LOGW(TAG, "read_status returned status 0xFF status=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(status));
   return value;
 }
 
@@ -69,12 +96,23 @@ void CC1101Driver::write_burst(CC1101Register reg, const uint8_t *buffer,
 
 uint8_t CC1101Driver::send_strobe(CC1101Strobe strobe) {
   uint8_t addr = static_cast<uint8_t>(strobe);
-  uint8_t status = 0;
+  uint8_t status = 0xFF;
 
-  this->spi_->enable();
-  status = this->spi_->transfer_byte(addr);
-  this->spi_->disable();
+  for (uint8_t attempt = 0; attempt < CC1101_SPI_MAX_RETRIES; attempt++) {
+    this->spi_->enable();
+    status = this->spi_->transfer_byte(addr);
+    this->spi_->disable();
 
+    if (status != 0xFF) {
+      if (attempt > 0) {
+        ESP_LOGV(TAG, "send_strobe retry ok strobe=0x%02X attempts=%u", static_cast<uint8_t>(strobe), attempt + 1);
+      }
+      return status;
+    }
+    delayMicroseconds(CC1101_SPI_RETRY_DELAY_US);
+  }
+
+  ESP_LOGW(TAG, "send_strobe returned 0xFF strobe=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(strobe));
   return status;
 }
 
