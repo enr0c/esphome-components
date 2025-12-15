@@ -4,11 +4,6 @@ from esphome.loader import get_component, ComponentManifest
 from esphome import codegen as cg
 from pathlib import Path
 import os
-try:
-    # Reuse ESPHome helper to register pre/post extra scripts
-    from esphome.components.esp32 import add_extra_script  # type: ignore
-except Exception:
-    add_extra_script = None
 
 CODEOWNERS = ["@SzczepanLeon", "@kubasaw"]
 CONF_DRIVERS = "drivers"
@@ -134,12 +129,11 @@ async def to_code(config):
         selected = ",".join(sorted(_registered_drivers))
         if selected:
             cg.add_define("ESPHOME_WMBUS_INCLUDE_DRIVERS", selected)
-        # Register a pre-build script to physically exclude non-selected drivers
-        if add_extra_script is not None:
-            script_path = os.path.join(os.path.dirname(__file__), "filter_wmbus_drivers.py.script")
-            # Only register if the script exists in our component
-            if os.path.exists(script_path):
-                add_extra_script("pre", "filter_wmbus_drivers.py", script_path)
+        # Register a pre-build script to physically exclude non-selected drivers.
+        # Use an absolute path to avoid relying on ESP32's extra_build_files copy step.
+        script_path = os.path.join(os.path.dirname(__file__), "filter_wmbus_drivers.py")
+        if os.path.exists(script_path):
+            cg.add_platformio_option("extra_scripts", [f"pre:{script_path}"])
     except Exception:
         # Best-effort; build will proceed even if script/define cannot be added
         pass

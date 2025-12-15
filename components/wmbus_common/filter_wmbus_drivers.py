@@ -18,6 +18,8 @@ def _get_include_list_from_defines(env):
             break
     if not include_val:
         return set()
+    if isinstance(include_val, str):
+        include_val = include_val.strip().strip('"').strip("'")
     return {name.strip() for name in include_val.split(",") if name.strip()}
 
 
