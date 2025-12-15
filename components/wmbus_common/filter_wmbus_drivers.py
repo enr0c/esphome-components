@@ -6,6 +6,15 @@ from glob import glob
 
 
 def _get_include_list_from_defines(env):
+    # Prefer a dedicated project option injected by ESPHome codegen.
+    try:
+        opt = env.GetProjectOption("custom_wmbus_include_drivers")
+    except Exception:
+        opt = None
+    if opt:
+        opt = str(opt).strip().strip('"').strip("'")
+        return {name.strip() for name in opt.split(",") if name.strip()}
+
     # CPPDEFINES can be a list of strings and (key, value) tuples
     defines = env.get("CPPDEFINES", [])
     include_val = None
@@ -69,7 +78,19 @@ else:
     excluded = []
     kept = []
     if not included:
-        print("wmbus_common.pre: no selected drivers (leaving all driver_*.cc as-is)")
+        print("wmbus_common.pre: no selected drivers found (leaving all driver_*.cc as-is)")
+        try:
+            print("wmbus_common.pre: custom_wmbus_include_drivers=", env.GetProjectOption("custom_wmbus_include_drivers"))
+        except Exception:
+            pass
+        try:
+            print("wmbus_common.pre: build_flags=", env.GetProjectOption("build_flags"))
+        except Exception:
+            pass
+        try:
+            print("wmbus_common.pre: CPPDEFINES=", env.get("CPPDEFINES", []))
+        except Exception:
+            pass
         raise SystemExit(0)
     # Restore any previously excluded file that is now included
     for off_path in glob(os.path.join(src_dir, "driver_*.cc.off")):
