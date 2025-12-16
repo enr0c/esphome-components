@@ -16,6 +16,8 @@ static void log_cc1101_snapshot_(CC1101Driver &driver, InternalGPIOPin *gdo0_pin
   const bool gdo2 = (gdo2_pin != nullptr) ? gdo2_pin->digital_read() : false;
 
   const uint8_t marc = driver.read_status(CC1101Status::MARCSTATE);
+  const uint8_t partnum = driver.read_status(CC1101Status::PARTNUM);
+  const uint8_t version = driver.read_status(CC1101Status::VERSION);
   const uint8_t rxbytes = driver.read_status(CC1101Status::RXBYTES);
   const uint8_t txbytes = driver.read_status(CC1101Status::TXBYTES);
   const uint8_t pktstatus = driver.read_status(CC1101Status::PKTSTATUS);
@@ -41,9 +43,9 @@ static void log_cc1101_snapshot_(CC1101Driver &driver, InternalGPIOPin *gdo0_pin
   const uint8_t freq0 = driver.read_register(CC1101Register::FREQ0);
 
   ESP_LOGW(TAG,
-           "CC1101 snapshot (%s): MARC=0x%02X RXBYTES=0x%02X (n=%u ovf=%u) TXBYTES=0x%02X (n=%u) PKTSTATUS=0x%02X "
+           "CC1101 snapshot (%s): MARC=0x%02X PARTNUM=0x%02X VERSION=0x%02X RXBYTES=0x%02X (n=%u ovf=%u) TXBYTES=0x%02X (n=%u) PKTSTATUS=0x%02X "
            "RSSI=0x%02X LQI=0x%02X FREQEST=0x%02X VCO_VC_DAC=0x%02X GDO0=%d GDO2=%d",
-           reason, marc, rxbytes, rxbytes & 0x7F, (rxbytes & 0x80) ? 1 : 0, txbytes, txbytes & 0x7F, pktstatus, rssi, lqi,
+           reason, marc, partnum, version, rxbytes, rxbytes & 0x7F, (rxbytes & 0x80) ? 1 : 0, txbytes, txbytes & 0x7F, pktstatus, rssi, lqi,
            freqest, vco_vc_dac, gdo0, gdo2);
   ESP_LOGW(TAG,
            "CC1101 regs: IOCFG2=0x%02X IOCFG0=0x%02X FIFOTHR=0x%02X PKTCTRL1=0x%02X PKTCTRL0=0x%02X PKTLEN=0x%02X "
