@@ -27,7 +27,7 @@ static bool should_log_spi_ff_warning_() {
 
 uint8_t CC1101Driver::read_register(CC1101Register reg) {
   uint8_t addr = static_cast<uint8_t>(reg) | CC1101_READ_SINGLE;
-  uint8_t value = 0;
+  uint8_t value = 0xFF;
   uint8_t status_byte = 0xFF;
 
   for (uint8_t attempt = 0; attempt < CC1101_SPI_MAX_RETRIES; attempt++) {
@@ -48,7 +48,7 @@ uint8_t CC1101Driver::read_register(CC1101Register reg) {
   if (should_log_spi_ff_warning_()) {
     ESP_LOGW(TAG, "read_register returned status 0xFF reg=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(reg));
   }
-  return value;
+  return 0xFF;
 }
 
 void CC1101Driver::write_register(CC1101Register reg, uint8_t value) {
@@ -62,7 +62,7 @@ void CC1101Driver::write_register(CC1101Register reg, uint8_t value) {
 
 uint8_t CC1101Driver::read_status(CC1101Status status) {
   uint8_t addr = static_cast<uint8_t>(status) | CC1101_READ_BURST;
-  uint8_t value = 0;
+  uint8_t value = 0xFF;
   uint8_t status_byte = 0xFF;
 
   for (uint8_t attempt = 0; attempt < CC1101_SPI_MAX_RETRIES; attempt++) {
@@ -83,7 +83,7 @@ uint8_t CC1101Driver::read_status(CC1101Status status) {
   if (should_log_spi_ff_warning_()) {
     ESP_LOGW(TAG, "read_status returned status 0xFF status=0x%02X (SPI not ready/wiring?)", static_cast<uint8_t>(status));
   }
-  return value;
+  return 0xFF;
 }
 
 void CC1101Driver::read_burst(CC1101Register reg, uint8_t *buffer,

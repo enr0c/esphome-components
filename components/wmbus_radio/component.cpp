@@ -96,6 +96,13 @@ void Radio::wakeup_receiver_task_from_isr(TaskHandle_t *arg) {
 }
 
 void Radio::receive_frame() {
+  if (this->radio->is_failed()) {
+    // If the transceiver failed during setup (e.g., CC1101 not detected / SPI floating),
+    // keep the receiver task idle to avoid hammering SPI and spamming logs.
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    return;
+  }
+
   bool is_frame_oriented = this->radio->is_frame_oriented();
   bool use_interrupt = this->radio->has_irq_pin();
 

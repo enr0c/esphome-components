@@ -190,6 +190,8 @@ void CC1101::setup() {
   ESP_LOGCONFIG(TAG, "CC1101 setup complete");
 }
 void CC1101::restart_rx() {
+  if (this->is_failed())
+    return;
   this->set_idle_();
   this->init_rx_();
 }
@@ -258,6 +260,11 @@ int8_t CC1101::get_rssi() {
   return static_cast<int8_t>(rssi_dbm);
 }
 optional<uint8_t> CC1101::read() {
+  if (this->is_failed()) {
+    // Setup already decided the device is not usable (e.g. not detected on SPI).
+    // Returning empty keeps the receiver task quiet.
+    return {};
+  }
   switch (this->rx_state_) {
   case RxLoopState::FRAME_READY:
     if (this->rx_read_index_ < this->rx_buffer_.size()) {
