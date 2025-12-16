@@ -187,8 +187,10 @@ void CC1101::setup() {
   bool gdo0_rx = (this->gdo0_pin_ != nullptr) ? this->gdo0_pin_->digital_read() : false;
   bool gdo2_rx = (this->gdo2_pin_ != nullptr) ? this->gdo2_pin_->digital_read() : false;
   ESP_LOGD(TAG, "GDO pin states in RX mode: GDO0=%d, GDO2=%d", gdo0_rx, gdo2_rx);
-  if (gdo0_initial == gdo0_rx && gdo2_initial == gdo2_rx) {
-    ESP_LOGW(TAG, "GDO pins did not change state - check pin connections!");
+  if (this->gdo0_pin_ != nullptr && this->gdo2_pin_ != nullptr) {
+    if (gdo0_initial == gdo0_rx && gdo2_initial == gdo2_rx) {
+      ESP_LOGW(TAG, "GDO pins did not change state - check pin connections!");
+    }
   }
   ESP_LOGCONFIG(TAG, "CC1101 setup complete");
 }
@@ -413,7 +415,14 @@ bool CC1101::wait_for_sync_() {
   if (this->gdo2_pin_ != nullptr) {
     return this->gdo2_pin_->digital_read();
   }
-  return false;
+  // No GDO2 wired/configured: fall back to polling RX FIFO.
+  // This is less robust than GDO2 sync, but is very useful for bring-up/debug.
+  const uint8_t rxbytes_status = this->driver_->read_status(CC1101Status::RXBYTES);
+  if (rxbytes_status == 0xFF) {
+    return false;
+  }
+  // If at least a header's worth of bytes is present, treat it as a potential frame start.
+  return (rxbytes_status & 0x7F) >= 4;
 }
 bool CC1101::wait_for_data_() {
   uint8_t rxbytes_status = this->driver_->read_status(CC1101Status::RXBYTES);
