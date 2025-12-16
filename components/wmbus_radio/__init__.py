@@ -53,17 +53,14 @@ def validate_radio_config(config):
     radio_type = config[CONF_RADIO_TYPE]
 
     if radio_type == "CC1101":
-        # CC1101 requires GDO0 and GDO2 pins
-        if CONF_GDO0_PIN not in config:
-            raise cv.Invalid(f"CC1101 requires '{CONF_GDO0_PIN}' to be specified")
-        if CONF_GDO2_PIN not in config:
-            raise cv.Invalid(f"CC1101 requires '{CONF_GDO2_PIN}' to be specified")
+        # CC1101: GDO0/GDO2 are optional.
+        # If not provided, receiver falls back to SPI polling (useful for bring-up/debug).
         # CC1101 has no hardware reset pin (uses software SRES strobe)
         if CONF_RESET_PIN in config:
             raise cv.Invalid(f"CC1101 does not have a hardware reset pin (uses software reset). Remove '{CONF_RESET_PIN}'")
         # IRQ_PIN not used for CC1101
         if CONF_IRQ_PIN in config:
-            raise cv.Invalid(f"CC1101 does not use '{CONF_IRQ_PIN}', use '{CONF_GDO0_PIN}' and '{CONF_GDO2_PIN}' instead")
+            raise cv.Invalid(f"CC1101 does not use '{CONF_IRQ_PIN}'.")
     elif radio_type == "SX1276":
         # SX1276 requires reset and IRQ pins
         if CONF_RESET_PIN not in config:
@@ -119,12 +116,14 @@ async def to_code(config):
     # Configure pins based on radio type
     radio_type = config[CONF_RADIO_TYPE]
     if radio_type == "CC1101":
-        # CC1101 uses GDO0 and GDO2 pins (no hardware reset)
-        gdo0_pin = await cg.gpio_pin_expression(config[CONF_GDO0_PIN])
-        cg.add(radio_var.set_gdo0_pin(gdo0_pin))
+        # CC1101 uses optional GDO0/GDO2 pins (no hardware reset).
+        if CONF_GDO0_PIN in config:
+            gdo0_pin = await cg.gpio_pin_expression(config[CONF_GDO0_PIN])
+            cg.add(radio_var.set_gdo0_pin(gdo0_pin))
 
-        gdo2_pin = await cg.gpio_pin_expression(config[CONF_GDO2_PIN])
-        cg.add(radio_var.set_gdo2_pin(gdo2_pin))
+        if CONF_GDO2_PIN in config:
+            gdo2_pin = await cg.gpio_pin_expression(config[CONF_GDO2_PIN])
+            cg.add(radio_var.set_gdo2_pin(gdo2_pin))
 
         # Set frequency if specified
         if CONF_FREQUENCY in config:
