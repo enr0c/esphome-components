@@ -83,17 +83,19 @@ void CC1101::setup() {
   uint8_t version = this->driver_->read_status(CC1101Status::VERSION);
   ESP_LOGD(TAG, "CC1101 PARTNUM: 0x%02X (expected: 0x00)", partnum);
   ESP_LOGD(TAG, "CC1101 VERSION: 0x%02X (expected: 0x04 or 0x14)", version);
-  if (version == 0 || version == 0xFF) {
-    ESP_LOGE(TAG, "CC1101 not detected! SPI communication failed. Check wiring:");
-    ESP_LOGE(TAG, "  - CS pin: connected and correct?");
-    ESP_LOGE(TAG, "  - MOSI/MISO/SCK: connected and correct?");
-    ESP_LOGE(TAG, "  - VCC: 3.3V supplied?");
-    ESP_LOGE(TAG, "  - GND: connected?");
+  const bool version_ok = (version == 0x04) || (version == 0x14);
+  const bool partnum_ok = (partnum == 0x00);
+  if (!version_ok || !partnum_ok) {
+    ESP_LOGE(TAG, "CC1101 not detected (bad ID readback). Expected PARTNUM=0x00 and VERSION=0x04/0x14.");
+    ESP_LOGE(TAG, "Got PARTNUM=0x%02X VERSION=0x%02X. This usually means SPI wiring/CS/MISO is wrong or unstable.", partnum, version);
+    ESP_LOGE(TAG, "Check wiring:");
+    ESP_LOGE(TAG, "  - CC1101 SO -> ESP32 MISO (GPIO19)");
+    ESP_LOGE(TAG, "  - CC1101 SI -> ESP32 MOSI (GPIO23)");
+    ESP_LOGE(TAG, "  - CC1101 SCLK -> ESP32 SCK (GPIO18)");
+    ESP_LOGE(TAG, "  - CC1101 CSN -> ESP32 CS (GPIO25)");
+    ESP_LOGE(TAG, "  - CC1101 GND <-> ESP32 GND, CC1101 VCC=3.3V");
     this->mark_failed();
     return;
-  }
-  if (partnum != 0x00) {
-    ESP_LOGW(TAG, "Unexpected PARTNUM 0x%02X (expected 0x00). Chip may not be CC1101.", partnum);
   }
   ESP_LOGCONFIG(TAG, "CC1101 detected - PARTNUM: 0x%02X, VERSION: 0x%02X", partnum, version);
   ESP_LOGD(TAG, "Applying wM-Bus RF settings (%zu registers)...", CC1101_WMBUS_RF_SETTINGS.size());
