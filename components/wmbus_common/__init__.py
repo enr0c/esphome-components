@@ -19,17 +19,6 @@ AVAILABLE_DRIVERS = {
     f.stem.removeprefix("driver_") for f in Path(__file__).parent.glob("driver_*.cc")
 }
 
-
-def validate_driver(value):
-    """Validate meter driver name used by wmbus_meter.
-
-    Accepts "auto" (let wmbusmeters pick based on telegram contents) or a
-    specific driver from AVAILABLE_DRIVERS.
-    """
-    if value == "auto":
-        return value
-    return cv.one_of(*AVAILABLE_DRIVERS, lower=True, space="_")(value)
-
 # Allow loader/codegen to pick up C++ sources with .cc extension.
 # (wmbus_common uses many .cc files; ESPHome defaults don't always include it.)
 SOURCE_FILE_EXTENSIONS.add(".cc")
