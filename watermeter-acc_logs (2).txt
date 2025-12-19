@@ -1,0 +1,465 @@
+[23:24:49]rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[23:24:49]configsip: 0, SPIWP:0xee
+[23:24:49]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[23:24:49]mode:DIO, clock div:2
+[23:24:49]load:0x3fff0030,len:6380
+[23:24:49]ho 0 tail 12 room 4
+[23:24:49]load:0x40078000,len:15916
+[23:24:49]load:0x40080400,len:3860
+[23:24:49]entry 0x40080630
+[23:24:49]I (29) boot: ESP-IDF 5.5.1 2nd stage bootloader
+[23:24:49]I (29) boot: compile time Dec 14 2025 19:56:14
+[23:24:49]I (29) boot: Multicore bootloader
+[23:24:49]I (31) boot: chip revision: v3.0
+[23:24:49]I (33) boot.esp32: SPI Speed      : 40MHz
+[23:24:49]I (37) boot.esp32: SPI Mode       : DIO
+[23:24:49]I (41) boot.esp32: SPI Flash Size : 4MB
+[23:24:49]I (44) boot: Enabling RNG early entropy source...
+[23:24:49]I (49) boot: Partition Table:
+[23:24:49]I (51) boot: ## Label            Usage          Type ST Offset   Length
+[23:24:49]I (58) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[23:24:49]I (64) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[23:24:49]I (71) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[23:24:49]I (77) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[23:24:49]I (84) boot:  4 nvs              WiFi data        01 02 00390000 0006d000
+[23:24:49]I (90) boot: End of partition table
+[23:24:49]I (94) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=35098h (217240) map
+[23:24:49]I (175) esp_image: segment 1: paddr=000450c0 vaddr=3ffb0000 size=0436ch ( 17260) load
+[23:24:49]I (182) esp_image: segment 2: paddr=00049434 vaddr=40080000 size=06be4h ( 27620) load
+[23:24:49]I (193) esp_image: segment 3: paddr=00050020 vaddr=400d0020 size=c612ch (811308) map
+[23:24:50]I (470) esp_image: segment 4: paddr=00116154 vaddr=40086be4 size=0f4c8h ( 62664) load
+[23:24:50]I (495) esp_image: segment 5: paddr=00125624 vaddr=50000000 size=00020h (    32) load
+[23:24:50]I (506) boot: Loaded app from partition at offset 0x10000
+[23:24:50]I (506) boot: Disabling RNG early entropy source...
+[23:24:50][I][logger:121]: Log initialized
+[23:24:50][C][safe_mode:084]: Unsuccessful boot attempts: 2
+[23:24:50][D][esp32.preferences:149]: Writing 1 items: 0 cached, 1 written, 0 failed
+[23:24:50][I][app:077]: Running through setup()
+[23:24:50][C][cc1101:068]: Setting up CC1101...
+[23:24:50][D][spi_device:393]: mode 0, data_rate 2000kHz
+[23:24:50][D][cc1101:079]: Sending software reset (SRES strobe)...
+[23:24:50][D][cc1101:084]: CC1101 PARTNUM: 0xFF (expected: 0x00)
+[23:24:50][D][cc1101:085]: CC1101 VERSION: 0xFF (expected: 0x04 or 0x14)
+[23:24:50][E][cc1101:089]: CC1101 not detected (bad ID readback). Expected PARTNUM=0x00 and VERSION=0x04/0x14.
+[23:24:50][E][cc1101:090]: Got PARTNUM=0xFF VERSION=0xFF. This usually means SPI wiring/CS/MISO is wrong or unstable.
+[23:24:50][E][cc1101:091]: Check wiring:
+[23:24:50][E][cc1101:092]:   - CC1101 SO -> ESP32 MISO (GPIO19)
+[23:24:50][E][cc1101:093]:   - CC1101 SI -> ESP32 MOSI (GPIO23)
+[23:24:50][E][cc1101:094]:   - CC1101 SCLK -> ESP32 SCK (GPIO18)
+[23:24:50][E][cc1101:095]:   - CC1101 CSN -> ESP32 CS (GPIO25)
+[23:24:50][E][cc1101:096]:   - CC1101 GND <-> ESP32 GND, CC1101 VCC=3.3V
+[23:24:50][E][component:246]: wmbus_radio was marked as failed
+[23:24:50][E][component:362]: wmbus_radio set Error flag: unspecified
+[23:24:50][I][wmbus:038]: Receiver task created [0x3ffc9b40]
+[23:24:50][W][component:333]: api set Warning flag: unspecified
+[23:24:50][I][app:124]: setup() finished successfully!
+[23:24:50][W][component:342]: wifi set Warning flag: scanning for networks
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][I][app:194]: ESPHome version 2025.12.0 compiled on Dec 18 2025, 23:21:38
+[23:24:50][C][logger:261]: Logger:
+[23:24:50][C][logger:261]:  Max Level: DEBUG
+[23:24:50][C][logger:261]:  Initial Level: DEBUG
+[23:24:50][C][logger:267]:   Log Baud Rate: 115200
+[23:24:50][C][logger:267]:  Hardware UART: UART0
+[23:24:50][C][logger:274]:   Task Log Buffer Size: 768
+[23:24:50][C][logger:280]:   Level for 'app': INFO
+[23:24:50][C][logger:280]:   Level for 'cc1101': DEBUG
+[23:24:50][C][logger:280]:   Level for 'component': INFO
+[23:24:50][C][logger:280]:   Level for 'esp32': INFO
+[23:24:50][C][logger:280]:   Level for 'spi': DEBUG
+[23:24:50][C][logger:280]:   Level for 'wifi': ERROR
+[23:24:50][C][logger:280]:   Level for 'wmbus_radio': DEBUG
+[23:24:50][C][spi:067]: SPI bus:
+[23:24:50][C][spi:068]:   CLK Pin: GPIO18
+[23:24:50][C][spi:069]:   SDI Pin: GPIO23
+[23:24:50][C][spi:070]:   SDO Pin: GPIO19
+[23:24:50][C][spi:075]:   Using HW SPI: SPI2_HOST
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][C][homeassistant.time:010]: Home Assistant Time
+[23:24:50][C][time:029]: Timezone: 'CET-1CEST,M3.5.0,M10.5.0/3'
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][C][wmbus.transceiver:117]: Transceiver: CC1101
+[23:24:50][E][component:188]:   wmbus_radio is marked FAILED: unspecified
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][W][component:490]: logger took a long time for an operation (51 ms)
+[23:24:50][W][component:493]: Components should block for at most 30 ms
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][C][wmbus_common:013]: wM-Bus Component v5.1.7-1.19.0-fe1b1e0:
+[23:24:50][C][wmbus_common:015]:   Loaded drivers:
+[23:24:50][C][wmbus_common:017]:    waterstarm
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][C][esphome.ota:092]: Over-The-Air updates:
+[23:24:50][C][esphome.ota:092]:  Address: esphome-watermeter-acc.local:3232
+[23:24:50][C][esphome.ota:092]:  Version: 2
+[23:24:50][C][esphome.ota:099]:   Password configured
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][C][safe_mode:018]: Safe Mode:
+[23:24:50][C][safe_mode:018]:  Successful after: 60s
+[23:24:50][C][safe_mode:018]:  Invoke after: 10 attempts
+[23:24:50][C][safe_mode:018]:  Duration: 300s
+[23:24:50][W][safe_mode:030]: Last reset too quick; invoke in 8 restarts
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:50][C][api:211]: Server:
+[23:24:50][C][api:211]:  Address: esphome-watermeter-acc.local:6053
+[23:24:50][C][api:211]:  Listen backlog: 4
+[23:24:50][C][api:211]:  Max connections: 8
+[23:24:50][C][api:218]:   Noise encryption: YES
+[23:24:50][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:50][D][cc1101:233][radio_recv]: Sync detected
+[23:24:50][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][C][mdns:177]: mDNS:
+[23:24:51][C][mdns:177]:  Hostname: esphome-watermeter-acc
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:51][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:51][D][cc1101:233][radio_recv]: Sync detected
+[23:24:51][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:52][D][cc1101:233][radio_recv]: Sync detected
+[23:24:52][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:52][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected
+[23:24:53][W][cc1101:327][radio_recv]: RX FIFO overflow while reading header
+[23:24:53][W][cc1101:314][radio_recv]: Failed to enter RX mode! MARCSTATE: 0xFF (expected: 0x0D)
+[23:24:53][D][cc1101:233][radio_recv]: Sync detected

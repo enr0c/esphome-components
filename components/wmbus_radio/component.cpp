@@ -32,6 +32,12 @@ void Radio::setup() {
 
   this->radio->set_packet_queue(this->packet_queue_);
 
+  if (this->radio->is_failed()) {
+    ESP_LOGE(TAG, "Radio transceiver failed during setup; not starting receiver task");
+    this->mark_failed();
+    return;
+  }
+
   ASSERT_SETUP(xTaskCreate((TaskFunction_t)this->receiver_task, "radio_recv",
                            3 * 1024, this, 2, &(this->receiver_task_handle_)));
 
@@ -96,6 +102,10 @@ void Radio::wakeup_receiver_task_from_isr(TaskHandle_t *arg) {
 }
 
 void Radio::receive_frame() {
+  if (this->is_failed() || this->radio->is_failed()) {
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    return;
+  }
   bool is_frame_oriented = this->radio->is_frame_oriented();
   bool use_interrupt = this->radio->has_irq_pin();
 

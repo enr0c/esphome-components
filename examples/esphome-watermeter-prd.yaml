@@ -1,6 +1,6 @@
 substitutions:
-  name: esphome-watermeter-prd
-  friendly_name: esphome-watermeter-prd
+  name: esphome-watermeter-acc
+  friendly_name: esphome-watermeter-acc
     
 esphome:
   name: "${name}"
@@ -63,7 +63,9 @@ spi:
 wmbus_radio:
   radio_type: CC1101
   cs_pin:   GPIO25  # white
-  gdo2_pin: GPIO27  # grey
+  gdo2_pin:
+    number: GPIO27  # grey
+    mode: INPUT_PULLDOWN
   gdo0_pin: GPIO26  # puprple (avoid GPIO4 strapping pin)
   frequency: 868.95
 
