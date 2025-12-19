@@ -50,14 +50,13 @@ void Radio::setup() {
 }
 
 void Radio::wakeup_polling_receiver_task() {
-  // Intentionally empty.
-  // For frame-oriented radios without an IRQ pin (e.g. CC1101), the receiver task
-  // polls based on get_polling_interval() and does not rely on task notifications.
+  if (this->radio->is_frame_oriented() && !this->radio->has_irq_pin()) {
+    xTaskNotifyGive(this->receiver_task_handle_);
+  }
 }
 
 void Radio::loop() {
-  if (this->is_failed() || this->radio == nullptr)
-    return;
+  this->wakeup_polling_receiver_task();
 
   Packet *p;
   if (xQueueReceive(this->packet_queue_, &p, 0) != pdPASS)
@@ -103,18 +102,12 @@ void Radio::wakeup_receiver_task_from_isr(TaskHandle_t *arg) {
 }
 
 void Radio::receive_frame() {
-  if (this->is_failed() || this->radio == nullptr || this->radio->is_failed()) {
+  if (this->is_failed() || this->radio->is_failed()) {
     vTaskDelay(pdMS_TO_TICKS(1000));
     return;
   }
   bool is_frame_oriented = this->radio->is_frame_oriented();
   bool use_interrupt = this->radio->has_irq_pin();
-
-  if (is_frame_oriented && !use_interrupt) {
-    this->radio->run_receiver();
-    vTaskDelay(pdMS_TO_TICKS(this->radio->get_polling_interval()));
-    return;
-  }
 
   static bool rx_initialized = false;
   if (is_frame_oriented && !rx_initialized) {
@@ -124,8 +117,9 @@ void Radio::receive_frame() {
     this->radio->restart_rx();
   }
 
-  uint32_t timeout_ms = is_frame_oriented ? this->radio->get_polling_interval()
-                                          : 60000;
+  uint32_t timeout_ms = is_frame_oriented
+                        ? this->radio->get_polling_interval()
+                        : 60000;
 
   if (!ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(timeout_ms))) {
     if (!is_frame_oriented) {
