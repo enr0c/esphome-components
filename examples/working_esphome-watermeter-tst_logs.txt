@@ -1,0 +1,286 @@
+[08:26:31]���>�)�a�+�ets Jul 29 2019 12:21:46
+[08:26:31]
+[08:26:31]rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[08:26:31]configsip: 0, SPIWP:0xee
+[08:26:31]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[08:26:31]mode:DIO, clock div:2
+[08:26:31]load:0x3fff0030,len:6380
+[08:26:31]ho 0 tail 12 room 4
+[08:26:31]load:0x40078000,len:15916
+[08:26:31]load:0x40080400,len:3860
+[08:26:31]entry 0x40080630
+[08:26:31]I (29) boot: ESP-IDF 5.5.1 2nd stage bootloader
+[08:26:31]I (29) boot: compile time Dec 19 2025 22:32:47
+[08:26:31]I (29) boot: Multicore bootloader
+[08:26:31]I (31) boot: chip revision: v3.1
+[08:26:31]I (33) boot.esp32: SPI Speed      : 40MHz
+[08:26:31]I (37) boot.esp32: SPI Mode       : DIO
+[08:26:31]I (41) boot.esp32: SPI Flash Size : 4MB
+[08:26:31]I (44) boot: Enabling RNG early entropy source...
+[08:26:31]I (49) boot: Partition Table:
+[08:26:31]I (51) boot: ## Label            Usage          Type ST Offset   Length
+[08:26:31]I (58) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[08:26:31]I (64) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[08:26:31]I (71) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[08:26:31]I (77) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[08:26:31]I (84) boot:  4 nvs              WiFi data        01 02 00390000 0006d000
+[08:26:31]I (90) boot: End of partition table
+[08:26:31]I (94) esp_image: segment 0: paddr=001d0020 vaddr=3f400020 size=350d8h (217304) map
+[08:26:32]I (175) esp_image: segment 1: paddr=00205100 vaddr=3ffb0000 size=0436ch ( 17260) load
+[08:26:32]I (182) esp_image: segment 2: paddr=00209474 vaddr=40080000 size=06ba4h ( 27556) load
+[08:26:32]I (193) esp_image: segment 3: paddr=00210020 vaddr=400d0020 size=c6178h (811384) map
+[08:26:32]I (470) esp_image: segment 4: paddr=002d61a0 vaddr=40086ba4 size=0f508h ( 62728) load
+[08:26:32]I (495) esp_image: segment 5: paddr=002e56b0 vaddr=50000000 size=00020h (    32) load
+[08:26:32]I (506) boot: Loaded app from partition at offset 0x1d0000
+[08:26:32]I (506) boot: Disabling RNG early entropy source...
+[08:26:32][I][logger:121]: Log initialized
+[08:26:32][C][safe_mode:084]: Unsuccessful boot attempts: 1
+[08:26:32][D][esp32.preferences:149]: Writing 1 items: 0 cached, 1 written, 0 failed
+[08:26:32][I][app:077]: Running through setup()
+[08:26:32][C][cc1101:068]: Setting up CC1101...
+[08:26:32][D][spi_device:393]: mode 0, data_rate 2000kHz
+[08:26:32][D][cc1101:079]: Sending software reset (SRES strobe)...
+[08:26:32][D][cc1101:084]: CC1101 PARTNUM: 0x00 (expected: 0x00)
+[08:26:32][D][cc1101:085]: CC1101 VERSION: 0x14 (expected: 0x04 or 0x14)
+[08:26:32][C][cc1101:100]: CC1101 detected - PARTNUM: 0x00, VERSION: 0x14
+[08:26:32][D][cc1101:101]: Applying wM-Bus RF settings (47 registers)...
+[08:26:32][D][cc1101:107]: Register verification:
+[08:26:32][D][cc1101:108]:   IOCFG2 (GDO2 config): 0x06 (expected: 0x06)
+[08:26:32][D][cc1101:109]:   IOCFG0 (GDO0 config): 0x00 (expected: 0x00)
+[08:26:32][D][cc1101:110]:   SYNC1: 0x54 (expected: 0x54)
+[08:26:32][D][cc1101:111]:   SYNC0: 0x3D (expected: 0x3D)
+[08:26:32][D][cc1101:117]: Register verification passed - RF settings applied successfully
+[08:26:32][D][cc1101:131]: Calibrating frequency synthesizer (SCAL strobe)...
+[08:26:32][D][cc1101:135]: MARCSTATE after calibration: 0x01 (IDLE=0x01)
+[08:26:32][C][cc1101:136]: CC1101 initialized successfully
+[08:26:32][C][cc1101:137]:   Chip version: 0x14
+[08:26:32][C][cc1101:138]:   Frequency: 868.95 MHz
+[08:26:32][D][cc1101:141]: GDO pin initial states: GDO0=0, GDO2=0
+[08:26:32][D][cc1101:146]: GDO pin states in RX mode: GDO0=0, GDO2=0
+[08:26:32][W][cc1101:148]: GDO pins did not change state - check pin connections!
+[08:26:32][C][cc1101:150]: CC1101 setup complete
+[08:26:32][I][wmbus:044]: Receiver task created [0x3ffc9b98]
+[08:26:32][W][component:333]: api set Warning flag: unspecified
+[08:26:32][I][app:124]: setup() finished successfully!
+[08:26:32][W][component:342]: wifi set Warning flag: scanning for networks
+[08:26:32][I][app:194]: ESPHome version 2025.12.1 compiled on Dec 19 2025, 23:06:54
+[08:26:32][C][logger:261]: Logger:
+[08:26:32][C][logger:261]:  Max Level: DEBUG
+[08:26:32][C][logger:261]:  Initial Level: DEBUG
+[08:26:32][C][logger:267]:   Log Baud Rate: 115200
+[08:26:32][C][logger:267]:  Hardware UART: UART0
+[08:26:32][C][logger:274]:   Task Log Buffer Size: 768
+[08:26:32][C][logger:280]:   Level for 'app': INFO
+[08:26:32][C][logger:280]:   Level for 'cc1101': DEBUG
+[08:26:32][C][logger:280]:   Level for 'component': INFO
+[08:26:32][C][logger:280]:   Level for 'esp32': INFO
+[08:26:32][C][logger:280]:   Level for 'spi': DEBUG
+[08:26:32][C][logger:280]:   Level for 'wifi': ERROR
+[08:26:32][C][logger:280]:   Level for 'wmbus_radio': DEBUG
+[08:26:32][C][spi:067]: SPI bus:
+[08:26:32][C][spi:068]:   CLK Pin: GPIO18
+[08:26:32][C][spi:069]:   SDI Pin: GPIO19
+[08:26:32][C][spi:070]:   SDO Pin: GPIO23
+[08:26:32][C][spi:075]:   Using HW SPI: SPI2_HOST
+[08:26:32][C][homeassistant.time:010]: Home Assistant Time
+[08:26:32][C][time:029]: Timezone: 'CET-1CEST,M3.5.0,M10.5.0/3'
+[08:26:32][C][wmbus.transceiver:117]: Transceiver: CC1101
+[08:26:32][C][wmbus_common:013]: wM-Bus Component v5.1.7-1.19.0-fe1b1e0:
+[08:26:32][C][wmbus_common:015]:   Loaded drivers:
+[08:26:32][C][wmbus_common:017]:    waterstarm
+[08:26:32][C][esphome.ota:092]: Over-The-Air updates:
+[08:26:32][C][esphome.ota:092]:  Address: esphome-watermeter-tst.local:3232
+[08:26:32][C][esphome.ota:092]:  Version: 2
+[08:26:32][C][esphome.ota:099]:   Password configured
+[08:26:32][C][safe_mode:018]: Safe Mode:
+[08:26:32][C][safe_mode:018]:  Successful after: 60s
+[08:26:32][C][safe_mode:018]:  Invoke after: 10 attempts
+[08:26:32][C][safe_mode:018]:  Duration: 300s
+[08:26:32][C][api:211]: Server:
+[08:26:32][C][api:211]:  Address: esphome-watermeter-tst.local:6053
+[08:26:32][C][api:211]:  Listen backlog: 4
+[08:26:32][C][api:211]:  Max connections: 8
+[08:26:32][C][api:218]:   Noise encryption: YES
+[08:26:32][C][mdns:177]: mDNS:
+[08:26:32][C][mdns:177]:  Hostname: esphome-watermeter-tst
+[08:26:36][W][component:373]: wifi cleared Warning flag
+[08:26:42][D][packet:118]: Have data from radio (183 bytes)
+[08:26:42][D][wmbusmeters:351]: raw packet "54CD9E44FA124410162300077A567A7C00902592D27C66525F1CD27B2B01FCD130947221EBBAA6941AFE0D241DA8B786E02DFEC1975DC2F5AE48653D951979407C0297F0A1EA020A23B109A5717132140E19374078ED1C181406D867DC0AE4193A6DC829D884A4CC4CC2C1F1A9311336A67B356B184C63CB410F19C2D0B0A03BE272E216D5FCAA71B16AB698F54E6049DA2CD62221D158F6CE1E988A3145160779E32B55E62B9B381C108B5A12295D729EFD8248155341"
+[08:26:42][D][wmbusmeters:351]: (wmbus) checkWMBUSFrame "9E44FA124410162300077A567A7C00902592D27C66525F1CD27B2B01FCD130947221EBBAA6941AFE0D241DA8B786E02DFEC1975DC2F5AE48653D951979407C0297F0A1EA020A23B109A5717132140E19374078ED1C181406D867DC0AE4193A6DC829D884A4CC4CC2C1F1A9311336A67B356B184C63CB410F19C2D0B0A03BE272E216D5FCAA71B16AB698F54E6049DA2CD62221D158F6CE1E988A3145160779E32B55E62B9B381C108B5A12295D729EFD8248155341"
+[08:26:42][I][wmbus:073]: Have data (181 bytes) [RSSI: -95dBm, mode: C1 A]
+[08:26:42][W][wmbus:084]: Telegram not handled by any handler
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 20: 902592D27C Maximum vif=12 HASCOMB HASCOMBRAW  st=10 ta=2 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 22: 6652 Minimum vif=52  st=1 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 33: FCD1309472 AtError vif=14 HASCOMB HASCOMBRAW  st=3 ta=13 su=1
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 41: 941AFE0D Maximum vif=7e HASCOMB HASCOMBRAW  st=20 ta=1 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 52: 86E02DFEC1975D Instantaneous vif=7e HASCOMB HASCOMBRAW  st=416 ta=10 su=1
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 61: 951979 Maximum vif=79  st=18 ta=1 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 70: F0A1EA020A AtError vif=a  st=1347 ta=10 su=2
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 73: 23B109 Minimum vif=31 HASCOMB HASCOMBRAW  st=0 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 78: 3214 AtError vif=14  st=0 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 82: 3740 AtError vif=40  st=0 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 94: DC0AE419 Maximum vif=64 HASCOMB HASCOMBRAW  st=21 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 108: D884A4CC4CC2C1F1A931 Maximum vif=42 HASCOMB HASCOMBRAW  st=104585 ta=8 su=12
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 110: 1336 Maximum vif=36  st=0 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 115: 6B18 Minimum vif=18  st=1 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 120: 410F Instantaneous vif=f  st=1 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 128: C2D0B0A03BE272 Instantaneous vif=62 HASCOMB HASCOMBRAW  st=90113 ta=237 su=1
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 136: D5FCAA71B16A Maximum vif=31 HASCOMB HASCOMBRAW  st=857 ta=59 su=5
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 142: 6049 Minimum vif=49  st=1 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 146: DA2CD622 Maximum vif=56 HASCOMB HASCOMBRAW  st=25 ta=2 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 152: 58F6CE1E Maximum vif=76 HASCOMB HASCOMBRAW  st=1 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 156: 988A3145 Maximum vif=45  st=52 ta=12 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 158: 1607 Maximum vif=7  st=0 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 167: 9B381C Maximum vif=1c  st=16 ta=3 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 172: 1229 Maximum vif=29  st=0 ta=0 su=0
+[08:26:42][D][wmbusmeters:585]: [DVPARSER] entry 179: 9EFD824815 Maximum vif=15  st=4186 ta=3 su=5
+[08:26:42][W][wmbus:089]: Check if telegram with address 23161044 can be parsed on:
+[08:26:42][W][wmbus:092]: https://wmbusmeters.org/analyze/9e44fa124410162300077a567a7c00902592d27c66525f1cd27b2b01fcd130947221ebbaa6941afe0d241da8b786e02dfec1975dc2f5ae48653d951979407c0297f0a1ea020a23b109a5717132140e19374078ed1c181406d867dc0ae4193a6dc829d884a4cc4cc2c1f1a9311336a67b356b184c63cb410f19c2d0b0a03be272e216d5fcaa71b16ab698f54e6049da2cd62221d158f6ce1e988a3145160779e32b55e62b9b381c108b5a12295d729efd8248155341
+[08:26:42][W][component:490]: wmbus_radio took a long time for an operation (235 ms)
+[08:26:42][W][component:493]: Components should block for at most 30 ms
+[08:26:42][D][cc1101:233][radio_recv]: Sync detected
+[08:26:42][D][cc1101:335][radio_recv]: FIFO has 22 bytes, reading header
+[08:26:42][D][cc1101:338][radio_recv]: Header bytes: 54 CD 9E 44
+[08:26:42][D][cc1101:402][radio_recv]: Frame detected: mode=C, block=A, L=0x9E, expected=183
+[08:26:42][D][cc1101:255][radio_recv]: Header received, processing frame data
+[08:26:42][D][cc1101:431][radio_recv]: GDO2 LOW detected, reading final 2 bytes
+[08:26:42][D][cc1101:437][radio_recv]: Frame complete via GDO2: 183 bytes
+[08:26:42][I][cc1101:265][radio_recv]: Frame received: 183 bytes, mode: C, L=0x9E
+[08:26:42][W][component:490]: logger took a long time for an operation (60 ms)
+[08:26:42][W][component:493]: Components should block for at most 30 ms
+[08:26:42][D][api:136]: Accept 192.168.178.32
+[08:26:42][W][component:373]: api cleared Warning flag
+[08:26:42][W][component:490]: api took a long time for an operation (54 ms)
+[08:26:42][W][component:493]: Components should block for at most 30 ms
+[08:26:42][D][api.connection:1398]: Home Assistant 2025.12.4 (192.168.178.32) connected
+[08:26:42][D][time:068]: Synchronized time: 2025-12-20 08:26:42
+[08:26:46][D][packet:118]: Have data from radio (183 bytes)
+[08:26:47][D][wmbusmeters:351]: raw packet "54CD9E44FA126488282200070CA47A2B009025743D48B0C37D46885EBDA2122E06CDF06592DC4FAC1DEFB63092C65AA3B17FF5246D77F3179A4475BA6F15C43491B007417D8D0E68570C892A74FA123072502A12889B255ACEC0CEBEB20F286EFCEEDEDFD5C4271FFFE2A3594B05D8ED9D0FBEE74E2BEE3A646E9507A50F25AA4455E21F980A95C118D9839EE1655280959345FEC8A2D5E44074EDE042388A4A0CFBC1F73AAC8ABCDC549D51B780F430E4E569DE87A2A8"
+[08:26:47][D][wmbusmeters:351]: (wmbus) checkWMBUSFrame "9E44FA126488282200070CA47A2B009025743D48B0C37D46885EBDA2122E06CDF06592DC4FAC1DEFB63092C65AA3B17FF5246D77F3179A4475BA6F15C43491B007417D8D0E68570C892A74FA123072502A12889B255ACEC0CEBEB20F286EFCEEDEDFD5C4271FFFE2A3594B05D8ED9D0FBEE74E2BEE3A646E9507A50F25AA4455E21F980A95C118D9839EE1655280959345FEC8A2D5E44074EDE042388A4A0CFBC1F73AAC8ABCDC549D51B780F430E4E569DE87A2A8"
+[08:26:47][I][wmbus:073]: Have data (181 bytes) [RSSI: -94dBm, mode: C1 A]
+[08:26:47][W][wmbus:084]: Telegram not handled by any handler
+[08:26:47][W][wmbus:089]: Check if telegram with address 22288864 can be parsed on:
+[08:26:47][W][wmbus:092]: https://wmbusmeters.org/analyze/9e44fa126488282200070ca47a2b009025743d48b0c37d46885ebda2122e06cdf06592dc4fac1defb63092c65aa3b17ff5246d77f3179a4475ba6f15c43491b007417d8d0e68570c892a74fa123072502a12889b255acec0cebeb20f286efceededfd5c4271fffe2a3594b05d8ed9d0fbee74e2bee3a646e9507a50f25aa4455e21f980a95c118d9839ee1655280959345fec8a2d5e44074ede042388a4a0cfbc1f73aac8abcdc549d51b780f430e4e569de87a2a8
+[08:26:47][D][cc1101:233][radio_recv]: Sync detected
+[08:26:47][D][cc1101:335][radio_recv]: FIFO has 24 bytes, reading header
+[08:26:47][D][cc1101:338][radio_recv]: Header bytes: 54 CD 9E 44
+[08:26:47][D][cc1101:402][radio_recv]: Frame detected: mode=C, block=A, L=0x9E, expected=183
+[08:26:47][D][cc1101:255][radio_recv]: Header received, processing frame data
+[08:26:47][I][cc1101:265][radio_recv]: Frame received: 183 bytes, mode: C, L=0x9E
+[08:26:48][D][packet:118]: Have data from radio (176 bytes)
+[08:26:48][D][wmbusmeters:351]: raw packet "543DAD44C5140945652300047A51009025098E73AF5BEB89486EFF8CD0F64D79F0B4F2533C302D48F3129656B1E2601A69CBE7FEBB9903210E2C4764A8906B8DBE5E4EED7FB4FE8E3944E9C50F36B5EE5ECA33E9A5050C8EBA3E52C7D7A43D5E0E374DDF7940EC2DB51D76D4D4605ABA1BA14A535A96CD64373D01A430D77F78D1F3317FB58E643BB03059D86AEDC44E53CEE819286B3C1A38B77A2BFDB29ECDE7794E03FD0C05010002FD0B211183E6"
+[08:26:48][D][wmbusmeters:351]: (wmbus) checkWMBUSFrame "AD44C5140945652300047A51009025098E73AF5BEB89486EFF8CD0F64D79F0B4F2533C302D48F3129656B1E2601A69CBE7FEBB9903210E2C4764A8906B8DBE5E4EED7FB4FE8E3944E9C50F36B5EE5ECA33E9A5050C8EBA3E52C7D7A43D5E0E374DDF7940EC2DB51D76D4D4605ABA1BA14A535A96CD64373D01A430D77F78D1F3317FB58E643BB03059D86AEDC44E53CEE819286B3C1A38B77A2BFDB29ECDE7794E03FD0C05010002FD0B211183E6"
+[08:26:48][I][wmbus:073]: Have data (174 bytes) [RSSI: -90dBm, mode: C1 B]
+[08:26:48][W][wmbus:084]: Telegram not handled by any handler
+[08:26:48][W][wmbus:089]: Check if telegram with address 23654509 can be parsed on:
+[08:26:48][W][wmbus:092]: https://wmbusmeters.org/analyze/ad44c5140945652300047a51009025098e73af5beb89486eff8cd0f64d79f0b4f2533c302d48f3129656b1e2601a69cbe7febb9903210e2c4764a8906b8dbe5e4eed7fb4fe8e3944e9c50f36b5ee5eca33e9a5050c8eba3e52c7d7a43d5e0e374ddf7940ec2db51d76d4d4605aba1ba14a535a96cd64373d01a430d77f78d1f3317fb58e643bb03059d86aedc44e53cee819286b3c1a38b77a2bfdb29ecde7794e03fd0c05010002fd0b211183e6
+[08:26:48][D][cc1101:233][radio_recv]: Sync detected
+[08:26:48][D][cc1101:335][radio_recv]: FIFO has 57 bytes, reading header
+[08:26:48][D][cc1101:338][radio_recv]: Header bytes: 54 3D AD 44
+[08:26:48][D][cc1101:402][radio_recv]: Frame detected: mode=C, block=B, L=0xAD, expected=176
+[08:26:48][D][cc1101:255][radio_recv]: Header received, processing frame data
+[08:26:48][D][cc1101:431][radio_recv]: GDO2 LOW detected, reading final 2 bytes
+[08:26:48][D][cc1101:437][radio_recv]: Frame complete via GDO2: 176 bytes
+[08:26:48][I][cc1101:265][radio_recv]: Frame received: 176 bytes, mode: C, L=0xAD
+[08:26:59][D][packet:118]: Have data from radio (183 bytes)
+[08:26:59][D][wmbusmeters:351]: raw packet "54CD9E44FA121140322200066E907AA60090256141387B415775F64214377D7CF462455FA4740A1DB61752A1E243AEF883F4B68A226DF525C2DF4F9CB6E968CF9FEB058B14DE0EB99A97EF6946271061CAF138EB88AEDC6A99F7C8512471E209E43D685874C6A75C43AEF52894D007EAB9E2BD5B9387A0CF3132C950D12DC303C22D4B49E8B3A85F841821966D0A3959E25298E54F3F37511F8A711AB20A79129BB2EF7787688E65FB24FFAF0A137128E6F2B8B62E0DA3"
+[08:26:59][D][wmbusmeters:351]: (wmbus) trimming frame A "9E44FA121140322200066E907AA60090256141387B415775F64214377D7CF462455FA4740A1DB61752A1E243AEF883F4B68A226DF525C2DF4F9CB6E968CF9FEB058B14DE0EB99A97EF6946271061CAF138EB88AEDC6A99F7C8512471E209E43D685874C6A75C43AEF52894D007EAB9E2BD5B9387A0CF3132C950D12DC303C22D4B49E8B3A85F841821966D0A3959E25298E54F3F37511F8A711AB20A79129BB2EF7787688E65FB24FFAF0A137128E6F2B8B62E0DA3"
+[08:26:59][D][wmbusmeters:351]: (wmbus) trimmed frame A "9E44FA121140322200067AA60090256141387B415775F6421437F462455FA4740A1DB61752A1E243AEF8B68A226DF525C2DF4F9CB6E968CF9FEB14DE0EB99A97EF6946271061CAF138EBDC6A99F7C8512471E209E43D685874C643AEF52894D007EAB9E2BD5B9387A0CFC950D12DC303C22D4B49E8B3A85F84186D0A3959E25298E54F3F37511F8A711A79129BB2EF7787688E65FB24FFAF0A13E6F2B8B62E"
+[08:26:59][D][wmbusmeters:351]: (wmbus) checkWMBUSFrame "9E44FA121140322200067AA60090256141387B415775F6421437F462455FA4740A1DB61752A1E243AEF8B68A226DF525C2DF4F9CB6E968CF9FEB14DE0EB99A97EF6946271061CAF138EBDC6A99F7C8512471E209E43D685874C643AEF52894D007EAB9E2BD5B9387A0CFC950D12DC303C22D4B49E8B3A85F84186D0A3959E25298E54F3F37511F8A711A79129BB2EF7787688E65FB24FFAF0A13E6F2B8B62E"
+[08:26:59][I][wmbus:073]: Have data (159 bytes) [RSSI: -65dBm, mode: C1 A]
+[08:26:59][W][wmbus:084]: Telegram not handled by any handler
+[08:26:59][W][wmbus:089]: Check if telegram with address 22324011 can be parsed on:
+[08:26:59][W][wmbus:092]: https://wmbusmeters.org/analyze/9e44fa121140322200067aa60090256141387b415775f6421437f462455fa4740a1db61752a1e243aef8b68a226df525c2df4f9cb6e968cf9feb14de0eb99a97ef6946271061caf138ebdc6a99f7c8512471e209e43d685874c643aef52894d007eab9e2bd5b9387a0cfc950d12dc303c22d4b49e8b3a85f84186d0a3959e25298e54f3f37511f8a711a79129bb2ef7787688e65fb24ffaf0a13e6f2b8b62e
+[08:26:59][D][cc1101:233][radio_recv]: Sync detected
+[08:26:59][D][cc1101:335][radio_recv]: FIFO has 33 bytes, reading header
+[08:26:59][D][cc1101:338][radio_recv]: Header bytes: 54 CD 9E 44
+[08:26:59][D][cc1101:402][radio_recv]: Frame detected: mode=C, block=A, L=0x9E, expected=183
+[08:26:59][D][cc1101:255][radio_recv]: Header received, processing frame data
+[08:26:59][D][cc1101:431][radio_recv]: GDO2 LOW detected, reading final 2 bytes
+[08:27:00][D][cc1101:437][radio_recv]: Frame complete via GDO2: 183 bytes
+[08:27:00][I][cc1101:265][radio_recv]: Frame received: 183 bytes, mode: C, L=0x9E
+[08:27:00][W][component:490]: logger took a long time for an operation (101 ms)
+[08:27:00][W][component:493]: Components should block for at most 30 ms
+[08:27:02][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:16][D][packet:118]: Have data from radio (183 bytes)
+[08:27:16][D][wmbusmeters:351]: raw packet "54CD9E44FA1261393222000613357AD000902539718F77505CB8A17C5C822C7A7B3ED09DDE905384FAB7AB40A0AECFFE7C0C5FBBE43212FDA1B8A2634B1C6CD4843EA328A13E40CDDBF5ABE5DCDBB681DA646FB4EE814A78BC412E11C1061D59BB66F4C31687B4C2618DEEEE3818615ACC80C1695D7ED972DAE46433E4C4E385E412393CB565EE4E04CE081E528DFE56CF7BB2A11E095C7834E913C72BE6A14D7D9EA0E86A62FC58CD2EECCF39D44D8BAFB00DC32485D3"
+[08:27:16][D][wmbusmeters:351]: (wmbus) trimming frame A "9E44FA1261393222000613357AD000902539718F77505CB8A17C5C822C7A7B3ED09DDE905384FAB7AB40A0AECFFE7C0C5FBBE43212FDA1B8A2634B1C6CD4843EA328A13E40CDDBF5ABE5DCDBB681DA646FB4EE814A78BC412E11C1061D59BB66F4C31687B4C2618DEEEE3818615ACC80C1695D7ED972DAE46433E4C4E385E412393CB565EE4E04CE081E528DFE56CF7BB2A11E095C7834E913C72BE6A14D7D9EA0E86A62FC58CD2EECCF39D44D8BAFB00DC32485D3"
+[08:27:16][D][wmbusmeters:351]: (wmbus) trimmed frame A "9E44FA126139322200067AD000902539718F77505CB8A17C5C827B3ED09DDE905384FAB7AB40A0AECFFE5FBBE43212FDA1B8A2634B1C6CD4843EA13E40CDDBF5ABE5DCDBB681DA646FB44A78BC412E11C1061D59BB66F4C31687618DEEEE3818615ACC80C1695D7ED9726433E4C4E385E412393CB565EE4E04CE528DFE56CF7BB2A11E095C7834E913C7A14D7D9EA0E86A62FC58CD2EECCF39D4AFB00DC324"
+[08:27:17][D][wmbusmeters:351]: (wmbus) checkWMBUSFrame "9E44FA126139322200067AD000902539718F77505CB8A17C5C827B3ED09DDE905384FAB7AB40A0AECFFE5FBBE43212FDA1B8A2634B1C6CD4843EA13E40CDDBF5ABE5DCDBB681DA646FB44A78BC412E11C1061D59BB66F4C31687618DEEEE3818615ACC80C1695D7ED9726433E4C4E385E412393CB565EE4E04CE528DFE56CF7BB2A11E095C7834E913C7A14D7D9EA0E86A62FC58CD2EECCF39D4AFB00DC324"
+[08:27:17][I][wmbus:073]: Have data (159 bytes) [RSSI: -87dBm, mode: C1 A]
+[08:27:17][W][wmbus:084]: Telegram not handled by any handler
+[08:27:17][W][wmbus:089]: Check if telegram with address 22323961 can be parsed on:
+[08:27:17][W][wmbus:092]: https://wmbusmeters.org/analyze/9e44fa126139322200067ad000902539718f77505cb8a17c5c827b3ed09dde905384fab7ab40a0aecffe5fbbe43212fda1b8a2634b1c6cd4843ea13e40cddbf5abe5dcdbb681da646fb44a78bc412e11c1061d59bb66f4c31687618deeee3818615acc80c1695d7ed9726433e4c4e385e412393cb565ee4e04ce528dfe56cf7bb2a11e095c7834e913c7a14d7d9ea0e86a62fc58cd2eeccf39d4afb00dc324
+[08:27:17][D][cc1101:233][radio_recv]: Sync detected
+[08:27:17][D][cc1101:335][radio_recv]: FIFO has 15 bytes, reading header
+[08:27:17][D][cc1101:338][radio_recv]: Header bytes: 54 CD 9E 44
+[08:27:17][D][cc1101:402][radio_recv]: Frame detected: mode=C, block=A, L=0x9E, expected=183
+[08:27:17][D][cc1101:255][radio_recv]: Header received, processing frame data
+[08:27:17][D][cc1101:431][radio_recv]: GDO2 LOW detected, reading final 2 bytes
+[08:27:17][D][cc1101:437][radio_recv]: Frame complete via GDO2: 183 bytes
+[08:27:17][I][cc1101:265][radio_recv]: Frame received: 183 bytes, mode: C, L=0x9E
+[08:27:18][D][packet:118]: Have data from radio (183 bytes)
+[08:27:18][D][wmbusmeters:351]: raw packet "54CD9E44FA12178330220007F9437A740090257A96E330588C1388C69AEA302E174A0942A0CE2E5E824F7D79D6CC47B85556BEC83F5443BDC62685D7CDA21765B299267123CE9ED5E59F5E564B1A0702D17559D91B7F65569F10FDC4330A7FB9320945851DED2ECCDC3B9B7E3EFE8AEE41A3ED5CBC7854555E3D13B99284F04EE2046464D39EC6BED1CBAAF7F18CE6CDE08CAE0C91262F361071E2C15589B0FF3158DCB28B61BEFB4826EADAC86BB2D5BE5E1F25B78E94"
+[08:27:18][D][wmbusmeters:351]: (wmbus) checkWMBUSFrame "9E44FA12178330220007F9437A740090257A96E330588C1388C69AEA302E174A0942A0CE2E5E824F7D79D6CC47B85556BEC83F5443BDC62685D7CDA21765B299267123CE9ED5E59F5E564B1A0702D17559D91B7F65569F10FDC4330A7FB9320945851DED2ECCDC3B9B7E3EFE8AEE41A3ED5CBC7854555E3D13B99284F04EE2046464D39EC6BED1CBAAF7F18CE6CDE08CAE0C91262F361071E2C15589B0FF3158DCB28B61BEFB4826EADAC86BB2D5BE5E1F25B78E94"
+[08:27:18][I][wmbus:073]: Have data (181 bytes) [RSSI: -80dBm, mode: C1 A]
+[08:27:18][W][wmbus:084]: Telegram not handled by any handler
+[08:27:18][W][wmbus:089]: Check if telegram with address 22308317 can be parsed on:
+[08:27:18][W][wmbus:092]: https://wmbusmeters.org/analyze/9e44fa12178330220007f9437a740090257a96e330588c1388c69aea302e174a0942a0ce2e5e824f7d79d6cc47b85556bec83f5443bdc62685d7cda21765b299267123ce9ed5e59f5e564b1a0702d17559d91b7f65569f10fdc4330a7fb9320945851ded2eccdc3b9b7e3efe8aee41a3ed5cbc7854555e3d13b99284f04ee2046464d39ec6bed1cbaaf7f18ce6cde08cae0c91262f361071e2c15589b0ff3158dcb28b61befb4826eadac86bb2d5be5e1f25b78e94
+[08:27:18][D][cc1101:233][radio_recv]: Sync detected
+[08:27:18][D][cc1101:335][radio_recv]: FIFO has 58 bytes, reading header
+[08:27:18][D][cc1101:338][radio_recv]: Header bytes: 54 CD 9E 44
+[08:27:18][D][cc1101:402][radio_recv]: Frame detected: mode=C, block=A, L=0x9E, expected=183
+[08:27:18][D][cc1101:255][radio_recv]: Header received, processing frame data
+[08:27:18][D][cc1101:431][radio_recv]: GDO2 LOW detected, reading final 2 bytes
+[08:27:18][D][cc1101:437][radio_recv]: Frame complete via GDO2: 183 bytes
+[08:27:18][I][cc1101:265][radio_recv]: Frame received: 183 bytes, mode: C, L=0x9E
+[08:27:21][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:27][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:32][I][safe_mode:042]: Boot seems successful; resetting boot loop counter
+[08:27:32][D][esp32.preferences:149]: Writing 1 items: 0 cached, 1 written, 0 failed
+[08:27:37][D][packet:118]: Have data from radio (183 bytes)
+[08:27:37][D][wmbusmeters:351]: raw packet "54CD9E44FA122145332200068CD57A2D0090250479E4CA7E479C5C126E95A178AD8619618B503CF8A356D4040011F0E38D514485CF49C4B27D7C16EECA200B6C648C5C61BDF3A52BB039109DFC6F704387A49E22C6669781B0E4092CE47C62022AEFE4238F961AD43011AEC61F8A6A067C7CC6E964B86A83DAB3ED17CCBFC88273C65E2FC6D56B34F726118773E2D6FBB518538FAF0B79F5EF563A6ED3E366561D1701C398CC127B3C30CB21B9FAD9983A7B9694A41A9D"
+[08:27:37][D][wmbusmeters:351]: (wmbus) checkWMBUSFrame "9E44FA122145332200068CD57A2D0090250479E4CA7E479C5C126E95A178AD8619618B503CF8A356D4040011F0E38D514485CF49C4B27D7C16EECA200B6C648C5C61BDF3A52BB039109DFC6F704387A49E22C6669781B0E4092CE47C62022AEFE4238F961AD43011AEC61F8A6A067C7CC6E964B86A83DAB3ED17CCBFC88273C65E2FC6D56B34F726118773E2D6FBB518538FAF0B79F5EF563A6ED3E366561D1701C398CC127B3C30CB21B9FAD9983A7B9694A41A9D"
+[08:27:37][I][wmbus:073]: Have data (181 bytes) [RSSI: -83dBm, mode: C1 A]
+[08:27:37][W][wmbus:084]: Telegram not handled by any handler
+[08:27:37][W][wmbus:089]: Check if telegram with address 22334521 can be parsed on:
+[08:27:37][W][wmbus:092]: https://wmbusmeters.org/analyze/9e44fa122145332200068cd57a2d0090250479e4ca7e479c5c126e95a178ad8619618b503cf8a356d4040011f0e38d514485cf49c4b27d7c16eeca200b6c648c5c61bdf3a52bb039109dfc6f704387a49e22c6669781b0e4092ce47c62022aefe4238f961ad43011aec61f8a6a067c7cc6e964b86a83dab3ed17ccbfc88273c65e2fc6d56b34f726118773e2d6fbb518538faf0b79f5ef563a6ed3e366561d1701c398cc127b3c30cb21b9fad9983a7b9694a41a9d
+[08:27:37][D][cc1101:233][radio_recv]: Sync detected
+[08:27:37][D][cc1101:335][radio_recv]: FIFO has 45 bytes, reading header
+[08:27:37][D][cc1101:338][radio_recv]: Header bytes: 54 CD 9E 44
+[08:27:37][D][cc1101:402][radio_recv]: Frame detected: mode=C, block=A, L=0x9E, expected=183
+[08:27:37][D][cc1101:255][radio_recv]: Header received, processing frame data
+[08:27:38][D][cc1101:431][radio_recv]: GDO2 LOW detected, reading final 2 bytes
+[08:27:38][D][cc1101:437][radio_recv]: Frame complete via GDO2: 183 bytes
+[08:27:38][I][cc1101:265][radio_recv]: Frame received: 183 bytes, mode: C, L=0x9E
+[08:27:41][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:45][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:50][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:50][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:52][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:56][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:59][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:27:59][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:28:20][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:28:31][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:28:47][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:28:48][D][packet:118]: Have data from radio (183 bytes)
+[08:28:48][D][wmbusmeters:351]: raw packet "54CD9E44FA126488282200070CA47A2C00902533BFBDAE81BE7A806BBF86D9989E82123CF43AC21B6132ED348533F159016182D48E8ACBF36F8E1C07B24AF86AE92E5F01788E259BA035D41AD8D3AED86595E65A1ED2EB48923402EBCF5653DCB7A574A8C46073681A4E74C6003F62424CEACC15647EC639A73B618D84FC43E7517BB9AEDE9B5862374185608E621E4FDDE819EFB23526BEF3B242C0C444D6CBF1AA514AB3052004288622EA9C76DEC747B18A2A731815"
+[08:28:48][D][wmbusmeters:351]: (wmbus) trimming frame A "9E44FA126488282200070CA47A2C00902533BFBDAE81BE7A806BBF86D9989E82123CF43AC21B6132ED348533F159016182D48E8ACBF36F8E1C07B24AF86AE92E5F01788E259BA035D41AD8D3AED86595E65A1ED2EB48923402EBCF5653DCB7A574A8C46073681A4E74C6003F62424CEACC15647EC639A73B618D84FC43E7517BB9AEDE9B5862374185608E621E4FDDE819EFB23526BEF3B242C0C444D6CBF1AA514AB3052004288622EA9C76DEC747B18A2A731815"
+[08:28:48][D][wmbusmeters:351]: (wmbus) trimmed frame A "9E44FA126488282200077A2C00902533BFBDAE81BE7A806BBF869E82123CF43AC21B6132ED348533F15982D48E8ACBF36F8E1C07B24AF86AE92E788E259BA035D41AD8D3AED86595E65AEB48923402EBCF5653DCB7A574A8C4601A4E74C6003F62424CEACC15647EC639618D84FC43E7517BB9AEDE9B586237418E621E4FDDE819EFB23526BEF3B242C0D6CBF1AA514AB3052004288622EA9C7647B18A2A73"
+[08:28:48][D][wmbusmeters:351]: (wmbus) checkWMBUSFrame "9E44FA126488282200077A2C00902533BFBDAE81BE7A806BBF869E82123CF43AC21B6132ED348533F15982D48E8ACBF36F8E1C07B24AF86AE92E788E259BA035D41AD8D3AED86595E65AEB48923402EBCF5653DCB7A574A8C4601A4E74C6003F62424CEACC15647EC639618D84FC43E7517BB9AEDE9B586237418E621E4FDDE819EFB23526BEF3B242C0D6CBF1AA514AB3052004288622EA9C7647B18A2A73"
+[08:28:48][I][wmbus:073]: Have data (159 bytes) [RSSI: -88dBm, mode: C1 A]
+[08:28:48][W][wmbus:084]: Telegram not handled by any handler
+[08:28:48][W][wmbus:089]: Check if telegram with address 22288864 can be parsed on:
+[08:28:48][W][wmbus:092]: https://wmbusmeters.org/analyze/9e44fa126488282200077a2c00902533bfbdae81be7a806bbf869e82123cf43ac21b6132ed348533f15982d48e8acbf36f8e1c07b24af86ae92e788e259ba035d41ad8d3aed86595e65aeb48923402ebcf5653dcb7a574a8c4601a4e74c6003f62424ceacc15647ec639618d84fc43e7517bb9aede9b586237418e621e4fdde819efb23526bef3b242c0d6cbf1aa514ab3052004288622ea9c7647b18a2a73
+[08:28:48][D][cc1101:233][radio_recv]: Sync detected
+[08:28:48][D][cc1101:335][radio_recv]: FIFO has 8 bytes, reading header
+[08:28:48][D][cc1101:338][radio_recv]: Header bytes: 54 CD 9E 44
+[08:28:48][D][cc1101:402][radio_recv]: Frame detected: mode=C, block=A, L=0x9E, expected=183
+[08:28:48][D][cc1101:255][radio_recv]: Header received, processing frame data
+[08:28:48][D][cc1101:431][radio_recv]: GDO2 LOW detected, reading final 3 bytes
+[08:28:48][D][cc1101:437][radio_recv]: Frame complete via GDO2: 183 bytes
+[08:28:48][I][cc1101:265][radio_recv]: Frame received: 183 bytes, mode: C, L=0x9E
+[08:29:06][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:29:10][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
+[08:29:17][W][cc1101:241][radio_recv]: FIFO overflow while waiting for sync, flushing
