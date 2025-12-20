@@ -27,7 +27,14 @@ namespace
     static bool ok = registerDriver([](DriverInfo&di)
     {
         di.setName("engelmann-faw");
-        di.setDefaultFields("name,id,status,reporting_date,consumption_at_reporting_date_m3,timestamp");
+        di.setDefaultFields(
+            "name,id,status,reporting_date,consumption_at_reporting_date_m3,"
+            "consumption_1_months_ago_m3,consumption_2_months_ago_m3,consumption_3_months_ago_m3,"
+            "consumption_4_months_ago_m3,consumption_5_months_ago_m3,consumption_6_months_ago_m3,"
+            "consumption_7_months_ago_m3,consumption_8_months_ago_m3,consumption_9_months_ago_m3,"
+            "consumption_10_months_ago_m3,consumption_11_months_ago_m3,consumption_12_months_ago_m3,"
+            "consumption_13_months_ago_m3,consumption_14_months_ago_m3,consumption_15_months_ago_m3,"
+            "timestamp");
         di.addLinkMode(LinkMode::T1);
         di.addLinkMode(LinkMode::C1);
         di.addDetection(MANUFACTURER_EFE,  0x07,  0x00);

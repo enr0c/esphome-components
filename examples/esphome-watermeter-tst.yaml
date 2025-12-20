@@ -5,6 +5,19 @@ substitutions:
 esphome:
   name: "${name}"
   friendly_name: "${friendly_name}"
+  devices:
+    - id: lorenz_22308176_device
+      name: "Kaltwasser Gästebad"
+    - id: lorenz_22308860_device
+      name: "Kaltwasser Masterbad"
+    - id: lorenz_22323962_device
+      name: "Warmwasser Gästebad"
+    - id: lorenz_22324011_device
+      name: "Warmwasser Masterbad"
+    - id: lorenz_23120547_device
+      name: "Waschkeller"
+    - id: engelmann_23651845_device
+      name: "Fussbodenheizung"
 
 esp32:
   board: esp32dev
@@ -71,16 +84,16 @@ wmbus_radio:
   on_frame:
     - then:
         - logger.log:
-            format: "RSSI: %ddBm T: %s (%d) %s"
             level: INFO
+            format: "RSSI: %ddBm T: %s (%d) %s"
             args: [ frame->rssi(), frame->as_hex().c_str(), frame->data().size(), toString(frame->link_mode()) ]
-
 
 # wM-Bus common configuration (no specific meters configured - scan all)
 wmbus_common:
   drivers:
     - waterstarm
     - engelmann-faw
+    - sensostar
 
 wmbus_meter:
   - id: lorenz_23120547
@@ -151,7 +164,7 @@ wmbus_meter:
   - id: engelmann_23651845
     radio_id: radio
     meter_id: 0x23651845
-    type: engelmann-faw
+    type: sensostar
     key: !secret engelmann_23651845
     on_telegram:
           then:
@@ -162,16 +175,205 @@ wmbus_meter:
                   - meter.get_id().c_str()
                   - meter.as_json(true).c_str()
 sensor:
-  - platform: wmbus_meter
-    parent_id: lorenz_22308176  
-    name: "total_m3"
-    field: "total_m3"
-    accuracy_decimals: 3
-    unit_of_measurement: "m³"
-    state_class: "measurement"
+# total water consumption sensors
   - platform: wmbus_meter
     parent_id: lorenz_22308176
-    name: "timestamp"
-    field: "timestamp"
-    device_class: "timestamp"
-    icon: "mdi:update"
+    device_id: lorenz_22308176_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total
+  - platform: wmbus_meter
+    parent_id: lorenz_22308860
+    device_id: lorenz_22308860_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total
+  - platform: wmbus_meter
+    parent_id: lorenz_22323962
+    device_id: lorenz_22323962_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total
+  - platform: wmbus_meter
+    parent_id: lorenz_22324011
+    device_id: lorenz_22324011_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total
+  - platform: wmbus_meter
+    parent_id: lorenz_23120547
+    device_id: lorenz_23120547_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total
+# battery voltage sensors as diagnostics
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    device_id: lorenz_22308176_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22308860
+    device_id: lorenz_22308860_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22323962
+    device_id: lorenz_22323962_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22324011
+    device_id: lorenz_22324011_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_23120547
+    device_id: lorenz_23120547_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: engelmann_23651845
+    device_id: engelmann_23651845_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+# RSSI sensor
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    device_id: lorenz_22308176_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22308860
+    device_id: lorenz_22308860_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22323962
+    device_id: lorenz_22323962_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22324011
+    device_id: lorenz_22324011_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_23120547
+    device_id: lorenz_23120547_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: engelmann_23651845
+    device_id: engelmann_23651845_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    device_id: lorenz_22308176_device
+    name: "Consumption At Set Date"
+    field: consumption_at_set_date_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    state_class: measurement
+  - platform: wmbus_meter
+    parent_id: engelmann_23651845
+    device_id: engelmann_23651845_device
+    name: "Engelmann 23651845 Total Energy"
+    field: total_kwh
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 0
+    state_class: total_increasing
+
+  - platform: wmbus_meter
+    parent_id: engelmann_23651845
+    device_id: engelmann_23651845_device
+    name: "Engelmann 23651845 Total Water"
+    field: total_water_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    state_class: measurement
+text_sensor:
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    device_id: lorenz_22308176_device
+    name: "Lorenz 22308176 Status"
+    field: status
+
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    device_id: lorenz_22308176_device
+    name: "Lorenz 22308176 Current Status"
+    field: current_status
+
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    device_id: lorenz_22308176_device
+    name: "Lorenz 22308176 Timestamp"
+    field: timestamp
+    device_class: timestamp
+
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    device_id: lorenz_22308176_device
+    name: "Lorenz 22308176 Meter Datetime"
+    field: meter_datetime
+    device_class: timestamp
+
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    device_id: lorenz_22308176_device
+    name: "Lorenz 22308176 Set Date"
+    field: set_date
+    device_class: timestamp
