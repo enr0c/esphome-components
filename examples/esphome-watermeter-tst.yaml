@@ -81,7 +81,18 @@ wmbus_common:
     - engelmann-faw
 
 wmbus_meter:
-   - id: lorenz_22308176
-     meter_id: 0x22308176
-     type: waterstarm
-     key: !secret lorenz_22308176
+  # Example: WaterStarM from your earlier logs
+  - id: water_23161062
+    radio_id: radio
+    meter_id: 0x23161062
+    type: waterstarm
+    mode: [C1]
+    # key: !secret water_23161062   # only if encrypted
+
+  # Your Lorenz example (keep only if this ID really exists in your logs)
+  - id: lorenz_22308176
+    radio_id: radio
+    meter_id: 0x22308176
+    type: waterstarm
+    mode: [C1]
+    key: !secret lorenz_22308176
