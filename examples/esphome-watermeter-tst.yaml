@@ -368,7 +368,7 @@ text_sensor:
     parent_id: lorenz_22308176
     device_id: lorenz_22308176_device
     name: "timestamp"
-    field: timestamp
+    field: timestamp_zulu
     device_class: timestamp
 
   - platform: wmbus_meter
