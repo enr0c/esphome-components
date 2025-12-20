@@ -367,8 +367,8 @@ text_sensor:
   - platform: wmbus_meter
     parent_id: lorenz_22308176
     device_id: lorenz_22308176_device
-    name: "Lorenz 22308176 Meter Datetime"
-    field: meter_datetime
+    name: "timestamp"
+    field: timestamp
     device_class: timestamp
 
   - platform: wmbus_meter
