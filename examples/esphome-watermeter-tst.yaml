@@ -12,17 +12,17 @@ esp32:
     type: esp-idf
 
 logger:
-  level: DEBUG  # Debug level to show frame hex dumps
+  level: INFO  # Debug level to show frame hex dumps
   tx_buffer_size: 2048  # Increase buffer to prevent log truncation
   baud_rate: 115200
   logs:
     component: INFO     # Reduce noise from other components
     esp32: INFO
-    spi: DEBUG
+    spi: INFO
     app: INFO
     wifi: ERROR         # Disable WiFi scan logs
-    wmbus_radio: DEBUG  # Show frame hex dumps
-    cc1101: DEBUG       # Show CC1101 details
+    wmbus_radio: INFO  # Show frame hex dumps
+    cc1101: INFO       # Show CC1101 details
 
 # Enable Home Assistant API
 api:
@@ -60,6 +60,7 @@ spi:
 
 
 wmbus_radio:
+  id: radio
   radio_type: CC1101
   cs_pin: GPIO25  # white
   gdo2_pin:
@@ -71,6 +72,7 @@ wmbus_radio:
     - then:
         - logger.log:
             format: "RSSI: %ddBm T: %s (%d) %s"
+            level: INFO
             args: [ frame->rssi(), frame->as_hex().c_str(), frame->data().size(), toString(frame->link_mode()) ]
 
 
@@ -81,18 +83,95 @@ wmbus_common:
     - engelmann-faw
 
 wmbus_meter:
-  # Example: WaterStarM from your earlier logs
-  - id: water_23161062
+  - id: lorenz_23120547
     radio_id: radio
-    meter_id: 0x23161062
+    meter_id: 0x23120547
     type: waterstarm
-    mode: [C1]
-    # key: !secret water_23161062   # only if encrypted
-
-  # Your Lorenz example (keep only if this ID really exists in your logs)
+    key: !secret lorenz_23120547
+    on_telegram:
+          then:
+            - logger.log:
+                level: INFO
+                format: "wmbus %s: %s"
+                args:
+                  - meter.get_id().c_str()
+                  - meter.as_json(true).c_str()
+  - id: lorenz_22324011
+    radio_id: radio
+    meter_id: 0x22324011
+    type: waterstarm
+    key: !secret lorenz_22324011
+    on_telegram:
+          then:
+            - logger.log:
+                level: INFO
+                format: "wmbus %s: %s"
+                args:
+                  - meter.get_id().c_str()
+                  - meter.as_json(true).c_str()
   - id: lorenz_22308176
     radio_id: radio
     meter_id: 0x22308176
     type: waterstarm
-    mode: [C1]
     key: !secret lorenz_22308176
+    on_telegram:
+          then:
+            - logger.log:
+                level: INFO
+                format: "wmbus %s: %s"
+                args:
+                  - meter.get_id().c_str()
+                  - meter.as_json(true).c_str()
+  - id: lorenz_22323962
+    radio_id: radio
+    meter_id: 0x22323962 
+    type: waterstarm
+    key: !secret lorenz_22323962
+    on_telegram:
+          then:
+            - logger.log:
+                level: INFO
+                format: "wmbus %s: %s"
+                args:
+                  - meter.get_id().c_str()
+                  - meter.as_json(true).c_str() 
+  - id: lorenz_22308860
+    radio_id: radio
+    meter_id: 0x22308860
+    type: waterstarm
+    key: !secret lorenz_22308860    
+    on_telegram:
+          then:
+            - logger.log:
+                level: INFO
+                format: "wmbus %s: %s"
+                args:
+                  - meter.get_id().c_str()
+                  - meter.as_json(true).c_str()
+  - id: engelmann_23651845
+    radio_id: radio
+    meter_id: 0x23651845
+    type: engelmann-faw
+    key: !secret engelmann_23651845
+    on_telegram:
+          then:
+            - logger.log:
+                level: INFO
+                format: "wmbus %s: %s"
+                args:
+                  - meter.get_id().c_str()
+                  - meter.as_json(true).c_str()
+sensor:
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176  
+    name: "total_m3"
+    field: "total_m3"
+    accuracy_decimals: 3
+    unit_of_measurement: "m³"
+    state_class: "measurement"
+  - platform: wmbus_meter
+    parent_id: lorenz_22308176
+    name: "timestamp"
+    field: "timestamp"
+    device_class: "timestamp"
+    icon: "mdi:update"

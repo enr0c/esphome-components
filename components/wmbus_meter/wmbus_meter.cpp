@@ -91,6 +91,8 @@ void Meter::handle_frame(wmbus_radio::Frame *frame) {
                               telegram.get());
 
   if (id_match) {
+    ESP_LOGI(TAG, "Telegram matched %s (RSSI: %d dBm, mode: %s)", this->meter->name().c_str(), frame->rssi(),
+             toString(frame->link_mode()));
     this->last_telegram = std::move(telegram);
     this->defer([this]() {
       this->on_telegram_callback_manager();
