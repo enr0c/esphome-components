@@ -8,6 +8,7 @@
 #include "esphome/components/wmbus_common/wmbus.h"
 #include <map>
 #include <string>
+#include <vector>
 
 namespace esphome {
 namespace wmbus_unhandled {
@@ -27,20 +28,34 @@ class UnhandledMeterTracker : public Component {
   
   void set_radio(wmbus_radio::Radio *radio) { this->radio_ = radio; }
   
-  text_sensor::TextSensor *get_id_sensor(const std::string &meter_id);
-  text_sensor::TextSensor *get_last_seen_sensor(const std::string &meter_id);
-  sensor::Sensor *get_rssi_sensor(const std::string &meter_id);
+  // Get unhandled meter information
+  std::vector<std::string> get_meter_ids() const;
+  const UnhandledMeterInfo* get_meter_info(const std::string &meter_id) const;
+  const std::map<std::string, UnhandledMeterInfo>& get_all_meters() const { return this->unhandled_meters_; }
+  
+  // Register a listener for updates
+  void add_on_update_callback(std::function<void()> &&callback) {
+    this->update_callbacks_.push_back(std::move(callback));
+  }
   
  protected:
   void handle_frame_(wmbus_radio::Frame *frame);
-  void create_sensors_for_meter_(const std::string &meter_id);
   std::string format_timestamp_(uint32_t millis);
+  void notify_update_();
   
   wmbus_radio::Radio *radio_{nullptr};
   std::map<std::string, UnhandledMeterInfo> unhandled_meters_;
-  std::map<std::string, text_sensor::TextSensor *> id_sensors_;
-  std::map<std::string, text_sensor::TextSensor *> last_seen_sensors_;
-  std::map<std::string, sensor::Sensor *> rssi_sensors_;
+  std::vector<std::function<void()>> update_callbacks_;
+};
+
+class UnhandledMeterTextSensor : public text_sensor::TextSensor, public Component {
+ public:
+  void set_tracker(UnhandledMeterTracker *tracker) { this->tracker_ = tracker; }
+  void setup() override;
+  void update_sensor();
+  
+ protected:
+  UnhandledMeterTracker *tracker_{nullptr};
 };
 
 }  // namespace wmbus_unhandled

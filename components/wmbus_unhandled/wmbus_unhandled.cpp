@@ -48,10 +48,10 @@ void UnhandledMeterTracker::handle_frame_(wmbus_radio::Frame *frame) {
   uint32_t now = millis();
   
   // Check if this is a new unhandled meter
-  if (this->unhandled_meters_.find(meter_id) == this->unhandled_meters_.end()) {
+  bool is_new = this->unhandled_meters_.find(meter_id) == this->unhandled_meters_.end();
+  if (is_new) {
     ESP_LOGI(TAG, "New unhandled meter detected: %s (RSSI: %d dBm)", 
              meter_id.c_str(), rssi);
-    this->create_sensors_for_meter_(meter_id);
   }
   
   // Update meter info
@@ -61,47 +61,30 @@ void UnhandledMeterTracker::handle_frame_(wmbus_radio::Frame *frame) {
   info.last_seen_millis = now;
   info.last_seen = this->format_timestamp_(now);
   
-  // Update sensors
-  if (this->id_sensors_[meter_id] != nullptr) {
-    this->id_sensors_[meter_id]->publish_state(meter_id);
-  }
-  if (this->last_seen_sensors_[meter_id] != nullptr) {
-    this->last_seen_sensors_[meter_id]->publish_state(info.last_seen);
-  }
-  if (this->rssi_sensors_[meter_id] != nullptr) {
-    this->rssi_sensors_[meter_id]->publish_state(rssi);
+  // Notify all registered callbacks
+  this->notify_update_();
+}
+
+void UnhandledMeterTracker::notify_update_() {
+  for (auto &callback : this->update_callbacks_) {
+    callback();
   }
 }
 
-void UnhandledMeterTracker::create_sensors_for_meter_(const std::string &meter_id) {
-  // Create text sensors for this meter
-  auto *id_sensor = new text_sensor::TextSensor();
-  id_sensor->set_name(("Unhandled Meter " + meter_id + " ID").c_str());
-  id_sensor->set_object_id(("unhandled_meter_" + meter_id + "_id").c_str());
-  id_sensor->set_entity_category(esphome::EntityCategory::ENTITY_CATEGORY_DIAGNOSTIC);
-  id_sensor->set_icon("mdi:identifier");
-  App.register_text_sensor(id_sensor);
-  this->id_sensors_[meter_id] = id_sensor;
-  
-  auto *last_seen_sensor = new text_sensor::TextSensor();
-  last_seen_sensor->set_name(("Unhandled Meter " + meter_id + " Last Seen").c_str());
-  last_seen_sensor->set_object_id(("unhandled_meter_" + meter_id + "_last_seen").c_str());
-  last_seen_sensor->set_entity_category(esphome::EntityCategory::ENTITY_CATEGORY_DIAGNOSTIC);
-  last_seen_sensor->set_icon("mdi:clock-outline");
-  App.register_text_sensor(last_seen_sensor);
-  this->last_seen_sensors_[meter_id] = last_seen_sensor;
-  
-  auto *rssi_sensor = new sensor::Sensor();
-  rssi_sensor->set_name(("Unhandled Meter " + meter_id + " RSSI").c_str());
-  rssi_sensor->set_object_id(("unhandled_meter_" + meter_id + "_rssi").c_str());
-  rssi_sensor->set_entity_category(esphome::EntityCategory::ENTITY_CATEGORY_DIAGNOSTIC);
-  rssi_sensor->set_unit_of_measurement("dBm");
-  rssi_sensor->set_device_class("signal_strength");
-  rssi_sensor->set_state_class(sensor::STATE_CLASS_MEASUREMENT);
-  rssi_sensor->set_icon("mdi:wifi");
-  rssi_sensor->set_accuracy_decimals(0);
-  App.register_sensor(rssi_sensor);
-  this->rssi_sensors_[meter_id] = rssi_sensor;
+std::vector<std::string> UnhandledMeterTracker::get_meter_ids() const {
+  std::vector<std::string> ids;
+  for (const auto &pair : this->unhandled_meters_) {
+    ids.push_back(pair.first);
+  }
+  return ids;
+}
+
+const UnhandledMeterInfo* UnhandledMeterTracker::get_meter_info(const std::string &meter_id) const {
+  auto it = this->unhandled_meters_.find(meter_id);
+  if (it != this->unhandled_meters_.end()) {
+    return &it->second;
+  }
+  return nullptr;
 }
 
 std::string UnhandledMeterTracker::format_timestamp_(uint32_t millis_val) {
@@ -128,16 +111,43 @@ std::string UnhandledMeterTracker::format_timestamp_(uint32_t millis_val) {
   return std::string(buffer);
 }
 
-text_sensor::TextSensor *UnhandledMeterTracker::get_id_sensor(const std::string &meter_id) {
-  return this->id_sensors_[meter_id];
+// UnhandledMeterTextSensor implementation
+
+void UnhandledMeterTextSensor::setup() {
+  if (this->tracker_ == nullptr) {
+    ESP_LOGE(TAG, "Tracker not set for text sensor!");
+    this->mark_failed();
+    return;
+  }
+  
+  // Register callback to update when new data arrives
+  this->tracker_->add_on_update_callback([this]() {
+    this->update_sensor();
+  });
 }
 
-text_sensor::TextSensor *UnhandledMeterTracker::get_last_seen_sensor(const std::string &meter_id) {
-  return this->last_seen_sensors_[meter_id];
-}
-
-sensor::Sensor *UnhandledMeterTracker::get_rssi_sensor(const std::string &meter_id) {
-  return this->rssi_sensors_[meter_id];
+void UnhandledMeterTextSensor::update_sensor() {
+  auto meter_ids = this->tracker_->get_meter_ids();
+  
+  if (meter_ids.empty()) {
+    this->publish_state("No unhandled meters");
+    return;
+  }
+  
+  // Publish count as state
+  std::string state = std::to_string(meter_ids.size()) + " unhandled meter(s)";
+  this->publish_state(state);
+  
+  // TODO: Add attributes with meter details when ESPHome supports it better
+  // For now, log the details
+  ESP_LOGD(TAG, "Unhandled meters:");
+  for (const auto &id : meter_ids) {
+    auto *info = this->tracker_->get_meter_info(id);
+    if (info) {
+      ESP_LOGD(TAG, "  %s: RSSI=%d dBm, Last seen=%s", 
+               id.c_str(), info->rssi, info->last_seen.c_str());
+    }
+  }
 }
 
 }  // namespace wmbus_unhandled

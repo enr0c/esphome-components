@@ -101,6 +101,7 @@ wmbus_common:
 
 # Track unhandled meters
 wmbus_unhandled:
+  id: unhandled_tracker
   radio_id: radio
 
 
@@ -356,6 +357,12 @@ sensor:
     device_class: water
     state_class: total_increasing
 text_sensor:
+  - platform: wmbus_unhandled
+    tracker_id: unhandled_tracker
+    name: "Unhandled Meters"
+    id: unhandled_meters_sensor
+    entity_category: diagnostic
+    
   - platform: wmbus_meter
     parent_id: lorenz_22308176
     device_id: lorenz_22308176_device
