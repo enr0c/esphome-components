@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/wmbus_radio/component.h"
+#include "esphome/components/wmbus_radio/packet.h"
 #include "esphome/components/wmbus_common/wmbus.h"
 #include <map>
 #include <string>
@@ -30,7 +31,7 @@ class UnhandledMeterTracker : public Component {
   text_sensor::TextSensor *get_rssi_sensor(const std::string &meter_id);
   
  protected:
-  void handle_frame_(Frame *frame);
+  void handle_frame_(wmbus_radio::Frame *frame);
   void create_sensors_for_meter_(const std::string &meter_id);
   std::string format_timestamp_(uint32_t millis);
   

@@ -1,6 +1,7 @@
 #include "wmbus_unhandled.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
+#include "esphome/components/time/real_time_clock.h"
 #include <ctime>
 
 namespace esphome {
@@ -16,7 +17,7 @@ void UnhandledMeterTracker::setup() {
   }
   
   // Register frame handler
-  this->radio_->add_frame_handler([this](Frame *frame) {
+  this->radio_->add_frame_handler([this](wmbus_radio::Frame *frame) {
     this->handle_frame_(frame);
   });
   
@@ -32,7 +33,7 @@ void UnhandledMeterTracker::dump_config() {
   ESP_LOGCONFIG(TAG, "  Tracking %d unhandled meters", this->unhandled_meters_.size());
 }
 
-void UnhandledMeterTracker::handle_frame_(Frame *frame) {
+void UnhandledMeterTracker::handle_frame_(wmbus_radio::Frame *frame) {
   // Only process frames that were not handled by any meter
   if (frame->handlers_count() > 0) {
     return;  // Frame was handled, not interested
@@ -99,13 +100,11 @@ void UnhandledMeterTracker::create_sensors_for_meter_(const std::string &meter_i
 }
 
 std::string UnhandledMeterTracker::format_timestamp_(uint32_t millis) {
-  // Convert millis to seconds
-  time_t seconds = millis / 1000;
-  
-  // Get current time from ESPHome time component if available
-  auto *time_comp = App.get_time();
-  if (time_comp != nullptr) {
-    auto now = time_comp->now();
+  // Get time from global time component if available
+#ifdef USE_TIME
+  auto time_id = time::global_time;
+  if (time_id != nullptr) {
+    auto now = time_id->now();
     if (now.is_valid()) {
       char buffer[64];
       snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d",
@@ -114,10 +113,24 @@ std::string UnhandledMeterTracker::format_timestamp_(uint32_t millis) {
       return std::string(buffer);
     }
   }
+#endif
   
   // Fallback: use millis
-  char buffer[32];
-  snprintf(buffer, sizeof(buffer), "%lu ms", (unsigned long)millis);
+  uint32_t seconds = millis / 1000;
+  uint32_t minutes = seconds / 60;
+  uint32_t hours = minutes / 60;
+  uint32_t days = hours / 24;
+  
+  char buffer[64];
+  if (days > 0) {
+    snprintf(buffer, sizeof(buffer), "%ud %uh ago", days, hours % 24);
+  } else if (hours > 0) {
+    snprintf(buffer, sizeof(buffer), "%uh %um ago", hours, minutes % 60);
+  } else if (minutes > 0) {
+    snprintf(buffer, sizeof(buffer), "%um %us ago", minutes, seconds % 60);
+  } else {
+    snprintf(buffer, sizeof(buffer), "%us ago", seconds);
+  }
   return std::string(buffer);
 }
 

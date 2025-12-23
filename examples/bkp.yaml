@@ -60,7 +60,7 @@ button:
 
 external_components:
   - source: github://enr0c/esphome-components@cc1101-support
-    components: [ wmbus_radio, wmbus_meter, wmbus_common, wmbus_unhandled ]
+    components: [ wmbus_radio, wmbus_meter, wmbus_common ]
     refresh: 0min
 # VCC = red
 # GND = orange
@@ -98,11 +98,6 @@ wmbus_common:
   drivers:
     - waterstarm
     - sensostar
-
-# Track unhandled meters
-wmbus_unhandled:
-  radio_id: radio
-
 
 wmbus_meter:
   - id: lorenz_23120547
