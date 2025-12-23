@@ -54,7 +54,7 @@ time:
   - platform: homeassistant
 
 external_components:
-  - source: github://enr0c/esphome-components@cc1101-support
+  - source: github://enr0c/esphome-components@toMain
     components: [ wmbus_radio, wmbus_meter, wmbus_common ]
     refresh: 0min
 # VCC = red
@@ -92,7 +92,6 @@ wmbus_radio:
 wmbus_common:
   drivers:
     - waterstarm
-    - engelmann-faw
     - sensostar
 
 wmbus_meter:
