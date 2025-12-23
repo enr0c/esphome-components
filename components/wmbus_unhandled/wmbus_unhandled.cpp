@@ -1,8 +1,6 @@
 #include "wmbus_unhandled.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
-#include "esphome/components/time/real_time_clock.h"
-#include <ctime>
 
 namespace esphome {
 namespace wmbus_unhandled {
@@ -99,37 +97,26 @@ void UnhandledMeterTracker::create_sensors_for_meter_(const std::string &meter_i
   this->rssi_sensors_[meter_id] = rssi_sensor;
 }
 
-std::string UnhandledMeterTracker::format_timestamp_(uint32_t millis) {
-  // Get time from global time component if available
-#ifdef USE_TIME
-  auto time_id = time::global_time;
-  if (time_id != nullptr) {
-    auto now = time_id->now();
-    if (now.is_valid()) {
-      char buffer[64];
-      snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d",
-               now.year, now.month, now.day_of_month,
-               now.hour, now.minute, now.second);
-      return std::string(buffer);
-    }
-  }
-#endif
-  
-  // Fallback: use millis
-  uint32_t seconds = millis / 1000;
+std::string UnhandledMeterTracker::format_timestamp_(uint32_t millis_val) {
+  // Format using uptime (days, hours, minutes, seconds)
+  uint32_t seconds = millis_val / 1000;
   uint32_t minutes = seconds / 60;
   uint32_t hours = minutes / 60;
   uint32_t days = hours / 24;
   
+  seconds = seconds % 60;
+  minutes = minutes % 60;
+  hours = hours % 24;
+  
   char buffer[64];
   if (days > 0) {
-    snprintf(buffer, sizeof(buffer), "%ud %uh ago", days, hours % 24);
+    snprintf(buffer, sizeof(buffer), "%ud %02uh %02um %02us", days, hours, minutes, seconds);
   } else if (hours > 0) {
-    snprintf(buffer, sizeof(buffer), "%uh %um ago", hours, minutes % 60);
+    snprintf(buffer, sizeof(buffer), "%uh %02um %02us", hours, minutes, seconds);
   } else if (minutes > 0) {
-    snprintf(buffer, sizeof(buffer), "%um %us ago", minutes, seconds % 60);
+    snprintf(buffer, sizeof(buffer), "%um %02us", minutes, seconds);
   } else {
-    snprintf(buffer, sizeof(buffer), "%us ago", seconds);
+    snprintf(buffer, sizeof(buffer), "%us", seconds);
   }
   return std::string(buffer);
 }
