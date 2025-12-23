@@ -69,7 +69,7 @@ void UnhandledMeterTracker::handle_frame_(wmbus_radio::Frame *frame) {
     this->last_seen_sensors_[meter_id]->publish_state(info.last_seen);
   }
   if (this->rssi_sensors_[meter_id] != nullptr) {
-    this->rssi_sensors_[meter_id]->publish_state(std::to_string(rssi) + " dBm");
+    this->rssi_sensors_[meter_id]->publish_state(rssi);
   }
 }
 
@@ -78,22 +78,29 @@ void UnhandledMeterTracker::create_sensors_for_meter_(const std::string &meter_i
   auto *id_sensor = new text_sensor::TextSensor();
   id_sensor->set_name(("Unhandled Meter " + meter_id + " ID").c_str());
   id_sensor->set_object_id(("unhandled_meter_" + meter_id + "_id").c_str());
-  id_sensor->set_entity_category(esphome::ENTITY_CATEGORY_DIAGNOSTIC);
+  id_sensor->set_entity_category(esphome::EntityCategory::ENTITY_CATEGORY_DIAGNOSTIC);
+  id_sensor->set_icon("mdi:identifier");
   App.register_text_sensor(id_sensor);
   this->id_sensors_[meter_id] = id_sensor;
   
   auto *last_seen_sensor = new text_sensor::TextSensor();
   last_seen_sensor->set_name(("Unhandled Meter " + meter_id + " Last Seen").c_str());
   last_seen_sensor->set_object_id(("unhandled_meter_" + meter_id + "_last_seen").c_str());
-  last_seen_sensor->set_entity_category(esphome::ENTITY_CATEGORY_DIAGNOSTIC);
+  last_seen_sensor->set_entity_category(esphome::EntityCategory::ENTITY_CATEGORY_DIAGNOSTIC);
+  last_seen_sensor->set_icon("mdi:clock-outline");
   App.register_text_sensor(last_seen_sensor);
   this->last_seen_sensors_[meter_id] = last_seen_sensor;
   
-  auto *rssi_sensor = new text_sensor::TextSensor();
+  auto *rssi_sensor = new sensor::Sensor();
   rssi_sensor->set_name(("Unhandled Meter " + meter_id + " RSSI").c_str());
   rssi_sensor->set_object_id(("unhandled_meter_" + meter_id + "_rssi").c_str());
-  rssi_sensor->set_entity_category(esphome::ENTITY_CATEGORY_DIAGNOSTIC);
-  App.register_text_sensor(rssi_sensor);
+  rssi_sensor->set_entity_category(esphome::EntityCategory::ENTITY_CATEGORY_DIAGNOSTIC);
+  rssi_sensor->set_unit_of_measurement("dBm");
+  rssi_sensor->set_device_class("signal_strength");
+  rssi_sensor->set_state_class(sensor::STATE_CLASS_MEASUREMENT);
+  rssi_sensor->set_icon("mdi:wifi");
+  rssi_sensor->set_accuracy_decimals(0);
+  App.register_sensor(rssi_sensor);
   this->rssi_sensors_[meter_id] = rssi_sensor;
 }
 
@@ -129,7 +136,7 @@ text_sensor::TextSensor *UnhandledMeterTracker::get_last_seen_sensor(const std::
   return this->last_seen_sensors_[meter_id];
 }
 
-text_sensor::TextSensor *UnhandledMeterTracker::get_rssi_sensor(const std::string &meter_id) {
+sensor::Sensor *UnhandledMeterTracker::get_rssi_sensor(const std::string &meter_id) {
   return this->rssi_sensors_[meter_id];
 }
 

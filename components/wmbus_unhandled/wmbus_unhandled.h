@@ -2,6 +2,7 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/components/sensor/sensor.h"
 #include "esphome/components/wmbus_radio/component.h"
 #include "esphome/components/wmbus_radio/packet.h"
 #include "esphome/components/wmbus_common/wmbus.h"
@@ -28,7 +29,7 @@ class UnhandledMeterTracker : public Component {
   
   text_sensor::TextSensor *get_id_sensor(const std::string &meter_id);
   text_sensor::TextSensor *get_last_seen_sensor(const std::string &meter_id);
-  text_sensor::TextSensor *get_rssi_sensor(const std::string &meter_id);
+  sensor::Sensor *get_rssi_sensor(const std::string &meter_id);
   
  protected:
   void handle_frame_(wmbus_radio::Frame *frame);
@@ -39,7 +40,7 @@ class UnhandledMeterTracker : public Component {
   std::map<std::string, UnhandledMeterInfo> unhandled_meters_;
   std::map<std::string, text_sensor::TextSensor *> id_sensors_;
   std::map<std::string, text_sensor::TextSensor *> last_seen_sensors_;
-  std::map<std::string, text_sensor::TextSensor *> rssi_sensors_;
+  std::map<std::string, sensor::Sensor *> rssi_sensors_;
 };
 
 }  // namespace wmbus_unhandled
