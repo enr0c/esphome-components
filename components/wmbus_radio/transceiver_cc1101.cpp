@@ -10,6 +10,54 @@ namespace wmbus_radio {
 
 static const char *const TAG = "cc1101";
 
+static void log_cc1101_snapshot_(CC1101Driver &driver, InternalGPIOPin *gdo0_pin, InternalGPIOPin *gdo2_pin,
+                                 const char *reason) {
+  const bool gdo0 = (gdo0_pin != nullptr) ? gdo0_pin->digital_read() : false;
+  const bool gdo2 = (gdo2_pin != nullptr) ? gdo2_pin->digital_read() : false;
+
+  const uint8_t marc = driver.read_status(CC1101Status::MARCSTATE);
+  const uint8_t partnum = driver.read_status(CC1101Status::PARTNUM);
+  const uint8_t version = driver.read_status(CC1101Status::VERSION);
+  const uint8_t rxbytes = driver.read_status(CC1101Status::RXBYTES);
+  const uint8_t txbytes = driver.read_status(CC1101Status::TXBYTES);
+  const uint8_t pktstatus = driver.read_status(CC1101Status::PKTSTATUS);
+  const uint8_t rssi = driver.read_status(CC1101Status::RSSI);
+  const uint8_t lqi = driver.read_status(CC1101Status::LQI);
+  const uint8_t freqest = driver.read_status(CC1101Status::FREQEST);
+  const uint8_t vco_vc_dac = driver.read_status(CC1101Status::VCO_VC_DAC);
+
+  const uint8_t iocfg2 = driver.read_register(CC1101Register::IOCFG2);
+  const uint8_t iocfg0 = driver.read_register(CC1101Register::IOCFG0);
+  const uint8_t fifothr = driver.read_register(CC1101Register::FIFOTHR);
+  const uint8_t pktctrl1 = driver.read_register(CC1101Register::PKTCTRL1);
+  const uint8_t pktctrl0 = driver.read_register(CC1101Register::PKTCTRL0);
+  const uint8_t pktlen = driver.read_register(CC1101Register::PKTLEN);
+  const uint8_t mcsm2 = driver.read_register(CC1101Register::MCSM2);
+  const uint8_t mcsm1 = driver.read_register(CC1101Register::MCSM1);
+  const uint8_t mcsm0 = driver.read_register(CC1101Register::MCSM0);
+  const uint8_t mdmcfg2 = driver.read_register(CC1101Register::MDMCFG2);
+  const uint8_t sync1 = driver.read_register(CC1101Register::SYNC1);
+  const uint8_t sync0 = driver.read_register(CC1101Register::SYNC0);
+  const uint8_t freq2 = driver.read_register(CC1101Register::FREQ2);
+  const uint8_t freq1 = driver.read_register(CC1101Register::FREQ1);
+  const uint8_t freq0 = driver.read_register(CC1101Register::FREQ0);
+
+  const uint8_t rxbytes_n = rxbytes & 0x7F;
+  const bool rxbytes_ovf = (rxbytes & 0x80) != 0;
+  const uint8_t txbytes_n = txbytes & 0x7F;
+
+  ESP_LOGD(TAG,
+           "CC1101 snapshot (%s): MARC=0x%02X PARTNUM=0x%02X VERSION=0x%02X RXBYTES=0x%02X (n=%u ovf=%u) TXBYTES=0x%02X (n=%u) PKTSTATUS=0x%02X "
+           "RSSI=0x%02X LQI=0x%02X FREQEST=0x%02X VCO_VC_DAC=0x%02X GDO0=%d GDO2=%d",
+           reason, marc, partnum, version, rxbytes, rxbytes_n, rxbytes_ovf, txbytes, txbytes_n, pktstatus, rssi, lqi,
+           freqest, vco_vc_dac, gdo0, gdo2);
+  ESP_LOGD(TAG,
+           "  Registers: IOCFG2=0x%02X IOCFG0=0x%02X FIFOTHR=0x%02X PKTCTRL1=0x%02X PKTCTRL0=0x%02X PKTLEN=0x%02X "
+           "MCSM2=0x%02X MCSM1=0x%02X MCSM0=0x%02X MDMCFG2=0x%02X SYNC=0x%02X%02X FREQ=0x%02X%02X%02X",
+           iocfg2, iocfg0, fifothr, pktctrl1, pktctrl0, pktlen, mcsm2, mcsm1, mcsm0, mdmcfg2, sync1, sync0, freq2, freq1,
+           freq0);
+}
+
 CC1101::CC1101()
     : gdo0_pin_(nullptr)
     , gdo2_pin_(nullptr)
