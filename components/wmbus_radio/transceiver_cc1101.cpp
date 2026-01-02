@@ -299,19 +299,43 @@ void CC1101::init_rx_() {
   this->length_mode_ = LengthMode::INFINITE;
   this->wmbus_mode_ = WMBusMode::UNKNOWN;
   this->wmbus_block_ = WMBusBlock::UNKNOWN;
+  
+  // Enter RX and verify MARCSTATE transitions. If the chip reports SLEEP (0x00) or RX_OVERFLOW (0x11),
+  // attempt a minimal recovery sequence and log a snapshot.
   this->driver_->send_strobe(CC1101Strobe::SRX);
-  uint8_t marc_state;
+  delay(1);
+  uint8_t marc_state = 0xFF;
+  uint8_t first_marc_state = 0xFF;
   bool rx_entered = false;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 50; i++) {
     marc_state = this->driver_->read_status(CC1101Status::MARCSTATE);
+    if (i == 0)
+      first_marc_state = marc_state;
+
     if (marc_state == static_cast<uint8_t>(CC1101State::RX)) {
       rx_entered = true;
       break;
     }
+
+    if (marc_state == static_cast<uint8_t>(CC1101State::RX_OVERFLOW)) {
+      ESP_LOGD(TAG, "MARCSTATE indicates RX overflow during RX entry, flushing and retrying");
+      this->driver_->send_strobe(CC1101Strobe::SFRX);
+      delay(1);
+      this->driver_->send_strobe(CC1101Strobe::SRX);
+    } else if (marc_state == static_cast<uint8_t>(CC1101State::SLEEP)) {
+      // If we ever read SLEEP here, it's a strong hint of SPI/chip-select issues or unintended powerdown.
+      // Try to wake to IDLE then re-enter RX.
+      this->driver_->send_strobe(CC1101Strobe::SIDLE);
+      delay(1);
+      this->driver_->send_strobe(CC1101Strobe::SRX);
+    }
+
     delay(1);
   }
   if (!rx_entered) {
-    ESP_LOGW(TAG, "Failed to enter RX mode! MARCSTATE: 0x%02X (expected: 0x0D)", marc_state);
+    ESP_LOGW(TAG, "Failed to enter RX mode! MARCSTATE first=0x%02X last=0x%02X (expected RX=0x0D)", first_marc_state,
+             marc_state);
+    log_cc1101_snapshot_(*this->driver_, this->gdo0_pin_, this->gdo2_pin_, "init_rx failed");
   }
   this->rx_state_ = RxLoopState::WAIT_FOR_SYNC;
 }
