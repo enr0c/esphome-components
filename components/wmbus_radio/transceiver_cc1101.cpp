@@ -335,8 +335,22 @@ optional<uint8_t> CC1101::read() {
 }
 void CC1101::init_rx_() {
   this->set_idle_();
+  
+  // Verify we reached IDLE before proceeding
+  uint8_t idle_check = this->driver_->read_status(CC1101Status::MARCSTATE);
+  if (idle_check != static_cast<uint8_t>(CC1101State::IDLE)) {
+    ESP_LOGW(TAG, "Not in IDLE after set_idle_(), state=0x%02X, forcing reset", idle_check);
+    // Force reset and recalibrate
+    this->driver_->send_strobe(CC1101Strobe::SRES);
+    delay(2);
+    this->driver_->send_strobe(CC1101Strobe::SCAL);
+    delay(4);
+  }
+  
   this->driver_->send_strobe(CC1101Strobe::SFTX);
   this->driver_->send_strobe(CC1101Strobe::SFRX);
+  delay(2);  // Allow FIFO flush to complete
+  
   this->driver_->write_register(CC1101Register::FIFOTHR, 0x0A);
   this->driver_->write_register(CC1101Register::PKTCTRL0, 0x02);
   this->rx_buffer_.clear();
@@ -348,14 +362,15 @@ void CC1101::init_rx_() {
   this->wmbus_mode_ = WMBusMode::UNKNOWN;
   this->wmbus_block_ = WMBusBlock::UNKNOWN;
   
-  // Enter RX and verify MARCSTATE transitions. If the chip reports SLEEP (0x00) or RX_OVERFLOW (0x11),
-  // attempt a minimal recovery sequence and log a snapshot.
+  // Enter RX with aggressive recovery
   this->driver_->send_strobe(CC1101Strobe::SRX);
-  delay(1);
+  delay(2);
   uint8_t marc_state = 0xFF;
   uint8_t first_marc_state = 0xFF;
   bool rx_entered = false;
-  for (int i = 0; i < 50; i++) {
+  int recovery_attempts = 0;
+  
+  for (int i = 0; i < 100; i++) {
     marc_state = this->driver_->read_status(CC1101Status::MARCSTATE);
     if (i == 0)
       first_marc_state = marc_state;
@@ -365,24 +380,40 @@ void CC1101::init_rx_() {
       break;
     }
 
+    // Handle error states
     if (marc_state == static_cast<uint8_t>(CC1101State::RX_OVERFLOW)) {
-      ESP_LOGD(TAG, "MARCSTATE indicates RX overflow during RX entry, flushing and retrying");
-      this->driver_->send_strobe(CC1101Strobe::SFRX);
-      delay(1);
-      this->driver_->send_strobe(CC1101Strobe::SRX);
-    } else if (marc_state == static_cast<uint8_t>(CC1101State::SLEEP)) {
-      // If we ever read SLEEP here, it's a strong hint of SPI/chip-select issues or unintended powerdown.
-      // Try to wake to IDLE then re-enter RX.
+      ESP_LOGD(TAG, "RX overflow detected, flushing and retrying");
       this->driver_->send_strobe(CC1101Strobe::SIDLE);
       delay(1);
+      this->driver_->send_strobe(CC1101Strobe::SFRX);
+      delay(2);
       this->driver_->send_strobe(CC1101Strobe::SRX);
+      delay(2);
+      recovery_attempts++;
+    } else if (marc_state == 0x00 || marc_state == static_cast<uint8_t>(CC1101State::IDLE)) {
+      // Stuck in IDLE/SLEEP - try recalibration every 10 attempts
+      if (recovery_attempts < 3 && i % 10 == 5) {
+        ESP_LOGD(TAG, "Stuck in IDLE/SLEEP (0x%02X), attempt %d: recalibrating", marc_state, recovery_attempts);
+        this->driver_->send_strobe(CC1101Strobe::SIDLE);
+        delay(1);
+        this->driver_->send_strobe(CC1101Strobe::SCAL);
+        delay(4);
+        this->driver_->send_strobe(CC1101Strobe::SRX);
+        delay(2);
+        recovery_attempts++;
+      } else if (i % 5 == 0) {
+        // Regular retry
+        this->driver_->send_strobe(CC1101Strobe::SRX);
+        delay(1);
+      }
     }
 
     delay(1);
   }
+  
   if (!rx_entered) {
-    ESP_LOGW(TAG, "Failed to enter RX mode! MARCSTATE first=0x%02X last=0x%02X (expected RX=0x0D)", first_marc_state,
-             marc_state);
+    ESP_LOGW(TAG, "Failed to enter RX mode! MARCSTATE first=0x%02X last=0x%02X (expected RX=0x0D), recovery_attempts=%d", 
+             first_marc_state, marc_state, recovery_attempts);
     log_cc1101_snapshot_(*this->driver_, this->gdo0_pin_, this->gdo2_pin_, "init_rx failed");
   }
   this->rx_state_ = RxLoopState::WAIT_FOR_SYNC;
