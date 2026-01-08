@@ -44,12 +44,12 @@ def _validate_drivers(value):
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(WMBusCommon),
-        cv.Optional(CONF_DRIVERS, default=[]): cv.Any(
-            "all",
-            cv.All(
+        cv.Optional(CONF_DRIVERS, default=[]): cv.All(
+            cv.Any(
+                "all",
                 cv.ensure_list(cv.one_of(*AVAILABLE_DRIVERS, lower=True, space="_")),
-                _validate_drivers,
             ),
+            _validate_drivers,
         ),
     }
 )
