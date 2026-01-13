@@ -1,23 +1,23 @@
 substitutions:
-  name: esphome-watermeter-tst
-  friendly_name: esphome-watermeter-tst
+  name: esphome-watermeter
+  friendly_name: esphome-watermeter
     
 esphome:
   name: "${name}"
   friendly_name: "${friendly_name}"
-  devices:
-    - id: lorenz_22308176_device
-      name: "Kaltwasser Gästebad"
-    - id: lorenz_22308860_device
-      name: "Kaltwasser Masterbad"
-    - id: lorenz_22323962_device
-      name: "Warmwasser Gästebad"
-    - id: lorenz_22324011_device
-      name: "Warmwasser Masterbad"
-    - id: lorenz_23120547_device
-      name: "Waschkeller"
-    - id: engelmann_23651845_device
-      name: "Fussbodenheizung"
+  devices:  #They appear as subdevices of the actual esp device. very helpful in homeassistant
+    - id: device_1_watermeter
+      name: "Coldwater Room 1"
+    - id: device_2_watermeter
+      name: "Coldwater Room 2"
+    - id: device_3_watermeter
+      name: "Warmwater Room 1"
+    - id: device_4_watermeter
+      name: "Warmwater Room 2"
+    - id: device_5_watermeter
+      name: "Coldwater Basement"
+    - id: device_6_watermeter
+      name: "Floor Heating Room 3"
 
 esp32:
   board: esp32dev
@@ -54,23 +54,22 @@ time:
   - platform: homeassistant
 
 external_components:
-  - source: github://enr0c/esphome-components@toMain
+  - source: github://enr0c/esphome-components@Main
     components: [ wmbus_radio, wmbus_meter, wmbus_common ]
     refresh: 0min
-# VCC = red
-# GND = orange
-# MOSI = yellow 
+# VCC   = red
+# GND   = orange
+# MOSI  = yellow 
 # S/CLK = green
-# MISO = blue
-# GDO2 =   grey
-# GDO0 =  puprple
-# CSN =   white
+# MISO  = blue
+# GDO2  = grey
+# GDO0  = puprple
+# CSN   = white
 
 spi:
   clk_pin:  GPIO18  # green
   mosi_pin: GPIO19  # yellow
   miso_pin: GPIO23  # blue
-
 
 wmbus_radio:
   id: radio
@@ -88,18 +87,21 @@ wmbus_radio:
             format: "RSSI: %ddBm T: %s (%d) %s"
             args: [ frame->rssi(), frame->as_hex().c_str(), frame->data().size(), toString(frame->link_mode()) ]
 
-# wM-Bus common configuration (no specific meters configured - scan all)
+# wM-Bus specific configuration
 wmbus_common:
   drivers:
     - waterstarm
     - sensostar
+# wM-Bus common configuration (scan all)
+wmbus_common:
+  drivers: all
 
 wmbus_meter:
-  - id: lorenz_23120547
+  - id: device_1
     radio_id: radio
-    meter_id: 0x23120547
+    meter_id: 0x12345678
     type: waterstarm
-    key: !secret lorenz_23120547
+    key: !secret device_1_aes_key
     on_telegram:
           then:
             - logger.log:
@@ -108,63 +110,11 @@ wmbus_meter:
                 args:
                   - meter.get_id().c_str()
                   - meter.as_json(true).c_str()
-  - id: lorenz_22324011
+  - id: device_2
     radio_id: radio
-    meter_id: 0x22324011
+    meter_id: 0x12345679
     type: waterstarm
-    key: !secret lorenz_22324011
-    on_telegram:
-          then:
-            - logger.log:
-                level: INFO
-                format: "wmbus %s: %s"
-                args:
-                  - meter.get_id().c_str()
-                  - meter.as_json(true).c_str()
-  - id: lorenz_22308176
-    radio_id: radio
-    meter_id: 0x22308176
-    type: waterstarm
-    key: !secret lorenz_22308176
-    on_telegram:
-          then:
-            - logger.log:
-                level: INFO
-                format: "wmbus %s: %s"
-                args:
-                  - meter.get_id().c_str()
-                  - meter.as_json(true).c_str()
-  - id: lorenz_22323962
-    radio_id: radio
-    meter_id: 0x22323962 
-    type: waterstarm
-    key: !secret lorenz_22323962
-    on_telegram:
-          then:
-            - logger.log:
-                level: INFO
-                format: "wmbus %s: %s"
-                args:
-                  - meter.get_id().c_str()
-                  - meter.as_json(true).c_str() 
-  - id: lorenz_22308860
-    radio_id: radio
-    meter_id: 0x22308860
-    type: waterstarm
-    key: !secret lorenz_22308860    
-    on_telegram:
-          then:
-            - logger.log:
-                level: INFO
-                format: "wmbus %s: %s"
-                args:
-                  - meter.get_id().c_str()
-                  - meter.as_json(true).c_str()
-  - id: engelmann_23651845
-    radio_id: radio
-    meter_id: 0x23651845
-    type: sensostar
-    key: !secret engelmann_23651845
+    key: !secret device_1_aes_key
     on_telegram:
           then:
             - logger.log:
@@ -176,203 +126,44 @@ wmbus_meter:
 sensor:
 # total water consumption sensors
   - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
+    parent_id: device_1
+    device_id: device_1_watermeter
     name: "total"
     field: total_m3
     unit_of_measurement: "m³"
     accuracy_decimals: 3
     device_class: water
     state_class: total
-  - platform: wmbus_meter
-    parent_id: lorenz_22308860
-    device_id: lorenz_22308860_device
-    name: "total"
-    field: total_m3
-    unit_of_measurement: "m³"
-    accuracy_decimals: 3
-    device_class: water
-    state_class: total
-  - platform: wmbus_meter
-    parent_id: lorenz_22323962
-    device_id: lorenz_22323962_device
-    name: "total"
-    field: total_m3
-    unit_of_measurement: "m³"
-    accuracy_decimals: 3
-    device_class: water
-    state_class: total
-  - platform: wmbus_meter
-    parent_id: lorenz_22324011
-    device_id: lorenz_22324011_device
-    name: "total"
-    field: total_m3
-    unit_of_measurement: "m³"
-    accuracy_decimals: 3
-    device_class: water
-    state_class: total
-  - platform: wmbus_meter
-    parent_id: lorenz_23120547
-    device_id: lorenz_23120547_device
-    name: "total"
-    field: total_m3
-    unit_of_measurement: "m³"
-    accuracy_decimals: 3
-    device_class: water
-    state_class: total
+ 
 # battery voltage sensors as diagnostics
   - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
+    parent_id: device_1
+    device_id: device_1_watermeter
     name: "Battery"
     field: battery_v
     unit_of_measurement: "V"
     accuracy_decimals: 2
     device_class: voltage
     entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_22308860
-    device_id: lorenz_22308860_device
-    name: "Battery"
-    field: battery_v
-    unit_of_measurement: "V"
-    accuracy_decimals: 2
-    device_class: voltage
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_22323962
-    device_id: lorenz_22323962_device
-    name: "Battery"
-    field: battery_v
-    unit_of_measurement: "V"
-    accuracy_decimals: 2
-    device_class: voltage
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_22324011
-    device_id: lorenz_22324011_device
-    name: "Battery"
-    field: battery_v
-    unit_of_measurement: "V"
-    accuracy_decimals: 2
-    device_class: voltage
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_23120547
-    device_id: lorenz_23120547_device
-    name: "Battery"
-    field: battery_v
-    unit_of_measurement: "V"
-    accuracy_decimals: 2
-    device_class: voltage
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: engelmann_23651845
-    device_id: engelmann_23651845_device
-    name: "Battery"
-    field: battery_v
-    unit_of_measurement: "V"
-    accuracy_decimals: 2
-    device_class: voltage
-    entity_category: diagnostic
+    
 # RSSI sensor
   - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
+    parent_id: device_1
+    device_id: device_1_watermeter
     name: "RSSI"
     field: rssi_dbm
     unit_of_measurement: "dBm"
     entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_22308860
-    device_id: lorenz_22308860_device
-    name: "RSSI"
-    field: rssi_dbm
-    unit_of_measurement: "dBm"
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_22323962
-    device_id: lorenz_22323962_device
-    name: "RSSI"
-    field: rssi_dbm
-    unit_of_measurement: "dBm"
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_22324011
-    device_id: lorenz_22324011_device
-    name: "RSSI"
-    field: rssi_dbm
-    unit_of_measurement: "dBm"
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_23120547
-    device_id: lorenz_23120547_device
-    name: "RSSI"
-    field: rssi_dbm
-    unit_of_measurement: "dBm"
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: engelmann_23651845
-    device_id: engelmann_23651845_device
-    name: "RSSI"
-    field: rssi_dbm
-    unit_of_measurement: "dBm"
-    entity_category: diagnostic
-  - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
-    name: "Consumption At Set Date"
-    field: consumption_at_set_date_m3
-    unit_of_measurement: "m³"
-    accuracy_decimals: 3
-    state_class: measurement
-  - platform: wmbus_meter
-    parent_id: engelmann_23651845
-    device_id: engelmann_23651845_device
-    name: "Engelmann 23651845 Total Energy"
-    field: total_kwh
-    unit_of_measurement: "kWh"
-    accuracy_decimals: 0
-    state_class: total_increasing
-
-  - platform: wmbus_meter
-    parent_id: engelmann_23651845
-    device_id: engelmann_23651845_device
-    name: "Engelmann 23651845 Total Water"
-    field: total_water_m3
-    unit_of_measurement: "m³"
-    accuracy_decimals: 3
-    state_class: measurement
+ 
 text_sensor:
   - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
-    name: "Lorenz 22308176 Status"
+    parent_id: device_1
+    device_id: device_1_watermeter
+    name: "status"
     field: status
-
   - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
-    name: "Lorenz 22308176 Current Status"
-    field: current_status
-
-  - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
-    name: "Lorenz 22308176 Timestamp"
-    field: timestamp
-    device_class: timestamp
-
-  - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
+    parent_id: device_1
+    device_id: device_1_watermeter
     name: "timestamp"
     field: timestamp_zulu
-    device_class: timestamp
-
-  - platform: wmbus_meter
-    parent_id: lorenz_22308176
-    device_id: lorenz_22308176_device
-    name: "Lorenz 22308176 Set Date"
-    field: set_date
     device_class: timestamp
