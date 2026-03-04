@@ -27,7 +27,21 @@ namespace
     static bool ok = registerDriver([](DriverInfo&di)
     {
         di.setName("sensostar");
-        di.setDefaultFields("name,id,total_kwh,total_water_m3,current_status,reporting_date,energy_consumption_at_reporting_date_kwh,timestamp");
+        di.setDefaultFields(
+            "name,id,meter_timestamp,total_kwh,power_kw,power_max_kw,flow_water_m3h,flow_water_max_m3h,"
+            "forward_c,return_c,difference_c,total_water_m3,current_status,reporting_date,"
+            "energy_consumption_at_reporting_date_kwh,"
+            "target_kwh,target_date,"
+            "target_1_kwh,target_2_kwh,target_3_kwh,target_4_kwh,target_5_kwh,target_6_kwh,target_7_kwh,target_8_kwh,target_9_kwh,"
+            "target_10_kwh,target_11_kwh,target_12_kwh,target_13_kwh,target_14_kwh,target_15_kwh,target_16_kwh,target_17_kwh,target_18_kwh,target_19_kwh,"
+            "target_20_kwh,target_21_kwh,target_22_kwh,target_23_kwh,target_24_kwh,target_25_kwh,target_26_kwh,target_27_kwh,target_28_kwh,target_29_kwh,"
+            "target_30_kwh,target_31_kwh,"
+            "consumption_1_months_ago_kwh,consumption_2_months_ago_kwh,consumption_3_months_ago_kwh,"
+            "consumption_4_months_ago_kwh,consumption_5_months_ago_kwh,consumption_6_months_ago_kwh,"
+            "consumption_7_months_ago_kwh,consumption_8_months_ago_kwh,consumption_9_months_ago_kwh,"
+            "consumption_10_months_ago_kwh,consumption_11_months_ago_kwh,consumption_12_months_ago_kwh,"
+            "consumption_13_months_ago_kwh,consumption_14_months_ago_kwh,consumption_15_months_ago_kwh,"
+            "timestamp");
         di.setMeterType(MeterType::HeatMeter);
         di.addLinkMode(LinkMode::C1);
         di.addLinkMode(LinkMode::T1);
@@ -192,6 +206,41 @@ namespace
             FieldMatcher::build()
             .set(MeasurementType::Instantaneous)
             .set(VIFRange::AnyEnergyVIF)
+            .set(StorageNr(1))
+            );
+
+        addNumericFieldWithExtractor(
+            "target",
+            "The target energy value at the target date.",
+            DEFAULT_PRINT_PROPERTIES,
+            Quantity::Energy,
+            VifScaling::Auto, DifSignedness::Signed,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::AnyEnergyVIF)
+            .set(StorageNr(1))
+            );
+
+        addStringFieldWithExtractor(
+            "target_date",
+            "The target date for the target energy values.",
+            DEFAULT_PRINT_PROPERTIES,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::Date)
+            .set(StorageNr(1))
+            );
+
+        addNumericFieldWithExtractor(
+            "target_{tariff_counter}",
+            "Target energy values indexed by tariff counter.",
+            DEFAULT_PRINT_PROPERTIES,
+            Quantity::Energy,
+            VifScaling::Auto, DifSignedness::Signed,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::AnyEnergyVIF)
+            .set(TariffNr(1), TariffNr(31))
             .set(StorageNr(1))
             );
 

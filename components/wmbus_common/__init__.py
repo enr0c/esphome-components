@@ -24,6 +24,17 @@ AVAILABLE_DRIVERS = {
 SOURCE_FILE_EXTENSIONS.add(".cc")
 
 
+def validate_driver(value):
+    """Validate meter driver name used by wmbus_meter.
+
+    Accepts "auto" (let wmbusmeters pick based on telegram contents) or a
+    specific driver from AVAILABLE_DRIVERS.
+    """
+    if value == "auto":
+        return value
+    return cv.one_of(*AVAILABLE_DRIVERS, lower=True, space="_")(value)
+
+
 def _validate_drivers(value):
     if value == "all":
         return set(AVAILABLE_DRIVERS)
@@ -33,12 +44,12 @@ def _validate_drivers(value):
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(WMBusCommon),
-        cv.Optional(CONF_DRIVERS, default=[]): cv.Any(
-            "all",
-            cv.All(
+        cv.Optional(CONF_DRIVERS, default=[]): cv.All(
+            cv.Any(
+                "all",
                 cv.ensure_list(cv.one_of(*AVAILABLE_DRIVERS, lower=True, space="_")),
-                _validate_drivers,
             ),
+            _validate_drivers,
         ),
     }
 )

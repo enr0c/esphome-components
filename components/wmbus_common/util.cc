@@ -197,15 +197,29 @@ std::string safeString(std::vector<uchar> &target) {
   return str;
 }
 
+static std::string vstrprintf_(const char *fmt, va_list args) {
+  va_list args_len;
+  va_copy(args_len, args);
+  int needed = vsnprintf(nullptr, 0, fmt, args_len);
+  va_end(args_len);
+
+  if (needed <= 0) {
+    return "";
+  }
+
+  std::vector<char> buf(static_cast<size_t>(needed) + 1);
+  va_list args_out;
+  va_copy(args_out, args);
+  vsnprintf(buf.data(), buf.size(), fmt, args_out);
+  va_end(args_out);
+  return std::string(buf.data(), static_cast<size_t>(needed));
+}
+
 std::string tostrprintf(const char *fmt, ...) {
-  std::string s;
-  char buf[4096];
   va_list args;
   va_start(args, fmt);
-  size_t n = vsnprintf(buf, 4096, fmt, args);
-  assert(n < 4096);
+  std::string s = vstrprintf_(fmt, args);
   va_end(args);
-  s = buf;
   return s;
 }
 
@@ -213,25 +227,18 @@ std::string tostrprintf(const char *fmt, ...) {
 // warning: passing an object of reference type to 'va_start' has undefined
 // behavior [-Wvarargs]
 std::string tostrprintf(const std::string *fmt, ...) {
-  std::string s;
-  char buf[4096];
   va_list args;
   va_start(args, fmt); // <<<<< here fmt must be a native type.
-  size_t n = vsnprintf(buf, 4096, fmt->c_str(), args);
-  assert(n < 4096);
+  std::string s = vstrprintf_(fmt->c_str(), args);
   va_end(args);
-  s = buf;
   return s;
 }
 
 void strprintf(std::string *s, const char *fmt, ...) {
-  char buf[4096];
   va_list args;
   va_start(args, fmt);
-  size_t n = vsnprintf(buf, 4096, fmt, args);
-  assert(n < 4096);
+  *s = vstrprintf_(fmt, args);
   va_end(args);
-  *s = buf;
 }
 
 void xorit(uchar *srca, uchar *srcb, uchar *dest, int len) {
