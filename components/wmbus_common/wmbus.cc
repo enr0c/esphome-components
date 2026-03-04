@@ -321,7 +321,7 @@ void Telegram::printTPL() {
 
   verbose("(telegram) TPL CI=%02x", tpl_ci);
 
-  if (tpl_ci == 0x7a || tpl_ci == 0x72) {
+  if (tpl_ci == 0x6e || tpl_ci == 0x7a || tpl_ci == 0x72) {
     std::string tpl_cfg_info = toStringFromTPLConfig(tpl_cfg);
     verbose(" ACC=%02x STS=%02x CFG=%04x (%s)", tpl_acc, tpl_sts, tpl_cfg,
             tpl_cfg_info.c_str());
@@ -643,6 +643,8 @@ std::string mediaTypeJSON(int a_field_device_type, int m_field) {
 
 #define LIST_OF_CI_FIELDS                                                      \
   X(0x51, TPL_51, "TPL: APL follows", 0, CI_TYPE::TPL, "")                     \
+  X(0x6E, TPL_6E, "TPL: application error from device (short tplh)", 0,         \
+    CI_TYPE::TPL, "")                                                          \
   X(0x72, TPL_72, "TPL: long header APL follows", 0, CI_TYPE::TPL, "")         \
   X(0x78, TPL_78, "TPL: no header APL follows", 0, CI_TYPE::TPL, "")           \
   X(0x79, TPL_79, "TPL: compact APL follows", 0, CI_TYPE::TPL, "")             \
@@ -2068,6 +2070,10 @@ bool Telegram::parseTPL(std::vector<uchar>::iterator &pos) {
     return expectedMore(__LINE__);
 
   switch (tpl_ci) {
+  case CI_Field_Values::TPL_6E:
+    // TPL application-error telegram with a short TPL header.
+    // Parse it like a generic short-header TPL message.
+    return parse_TPL_7A(pos);
   case CI_Field_Values::TPL_72:
     return parse_TPL_72(pos);
   case CI_Field_Values::TPL_78:
