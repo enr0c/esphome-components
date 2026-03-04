@@ -75,19 +75,19 @@ void Radio::loop() {
   if (frame->handlers_count())
     ESP_LOGI(TAG, "Telegram handled by %d handlers", frame->handlers_count());
   else {
-    if (ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG) {
-      ESP_LOGD(TAG, "Telegram not handled by any handler");
-      Telegram t;
-      if (t.parseHeader(frame->data()) && t.addresses.empty()) {
-        ESP_LOGD(TAG, "Check if telegram can be parsed on:");
-      } else {
-        ESP_LOGD(TAG, "Check if telegram with address %s can be parsed on:",
-                 t.addresses.back().id.c_str());
-      }
-      ESP_LOGD(TAG,
-               (std::string{"https://wmbusmeters.org/analyze/"} + frame->as_hex())
-                   .c_str());
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG
+    ESP_LOGD(TAG, "Telegram not handled by any handler");
+    Telegram t;
+    if (t.parseHeader(frame->data()) && t.addresses.empty()) {
+      ESP_LOGD(TAG, "Check if telegram can be parsed on:");
+    } else {
+      ESP_LOGD(TAG, "Check if telegram with address %s can be parsed on:",
+               t.addresses.back().id.c_str());
     }
+    ESP_LOGD(TAG,
+             (std::string{"https://wmbusmeters.org/analyze/"} + frame->as_hex())
+                 .c_str());
+#endif
   }
 }
 
