@@ -32,6 +32,12 @@ void Radio::setup() {
 
   this->radio->set_packet_queue(this->packet_queue_);
 
+  if (this->radio->is_failed()) {
+    ESP_LOGE(TAG, "Radio transceiver failed during setup; not starting receiver task");
+    this->mark_failed();
+    return;
+  }
+
   ASSERT_SETUP(xTaskCreate((TaskFunction_t)this->receiver_task, "radio_recv",
                            3 * 1024, this, 2, &(this->receiver_task_handle_)));
 
@@ -44,13 +50,14 @@ void Radio::setup() {
 }
 
 void Radio::wakeup_polling_receiver_task() {
-  if (this->radio->is_frame_oriented() && !this->radio->has_irq_pin()) {
-    xTaskNotifyGive(this->receiver_task_handle_);
-  }
+  // Intentionally empty.
+  // For frame-oriented radios without an IRQ pin (e.g. CC1101), the receiver task
+  // polls based on get_polling_interval() and does not rely on task notifications.
 }
 
 void Radio::loop() {
-  this->wakeup_polling_receiver_task();
+  if (this->is_failed() || this->radio == nullptr)
+    return;
 
   Packet *p;
   if (xQueueReceive(this->packet_queue_, &p, 0) != pdPASS)
@@ -98,15 +105,18 @@ void Radio::wakeup_receiver_task_from_isr(TaskHandle_t *arg) {
 }
 
 void Radio::receive_frame() {
-  if (this->radio->is_failed()) {
-    // If the transceiver failed during setup (e.g., CC1101 not detected / SPI floating),
-    // keep the receiver task idle to avoid hammering SPI and spamming logs.
+  if (this->is_failed() || this->radio == nullptr || this->radio->is_failed()) {
     vTaskDelay(pdMS_TO_TICKS(1000));
     return;
   }
-
   bool is_frame_oriented = this->radio->is_frame_oriented();
   bool use_interrupt = this->radio->has_irq_pin();
+
+  if (is_frame_oriented && !use_interrupt) {
+    this->radio->run_receiver();
+    vTaskDelay(pdMS_TO_TICKS(this->radio->get_polling_interval()));
+    return;
+  }
 
   static bool rx_initialized = false;
   if (is_frame_oriented && !rx_initialized) {
