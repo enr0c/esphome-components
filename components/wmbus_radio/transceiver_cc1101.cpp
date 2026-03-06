@@ -133,7 +133,7 @@ void CC1101::setup() {
     ESP_LOGE(TAG, "  - MOSI/MISO/SCK: connected and correct?");
     ESP_LOGE(TAG, "  - VCC: 3.3V supplied?");
     ESP_LOGE(TAG, "  - GND: connected?");
-    this->status_set_error("CC1101 not detected (SPI)");
+    this->status_set_error(LOG_STR("CC1101 not detected (SPI)"));
     this->mark_failed();
     return;
   }
