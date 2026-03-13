@@ -207,26 +207,12 @@ MeterCommonImplementation::MeterCommonImplementation(MeterInfo &mi,
   if (mi.key.length() > 0) {
     hex2bin(mi.key, &meter_keys_.confidentiality_key);
   }
-  for (auto s : mi.shells) {
-    addShellMeterUpdated(s);
-  }
-  for (auto s : mi.new_meter_shells) {
-    addShellMeterAdded(s);
-  }
   for (auto j : mi.extra_constant_fields) {
     addExtraConstantField(j);
   }
 
   link_modes_.unionLinkModeSet(di.linkModes());
   force_mfct_index_ = di.forceMfctIndex();
-}
-
-void MeterCommonImplementation::addShellMeterAdded(std::string cmdline) {
-  shell_cmdlines_added_.push_back(cmdline);
-}
-
-void MeterCommonImplementation::addShellMeterUpdated(std::string cmdline) {
-  shell_cmdlines_updated_.push_back(cmdline);
 }
 
 void MeterCommonImplementation::addExtraConstantField(std::string ecf) {
@@ -268,15 +254,6 @@ void MeterCommonImplementation::addExtraCalculatedField(std::string ecf) {
   addNumericFieldWithCalculator(vname, "Calculated: " + ecf,
                                 DEFAULT_PRINT_PROPERTIES, quantity, parts[1],
                                 unit);
-}
-
-std::vector<std::string> &MeterCommonImplementation::shellCmdlinesMeterAdded() {
-  return shell_cmdlines_added_;
-}
-
-std::vector<std::string> &
-MeterCommonImplementation::shellCmdlinesMeterUpdated() {
-  return shell_cmdlines_updated_;
 }
 
 std::vector<std::string> &
@@ -548,11 +525,15 @@ bool MeterCommonImplementation::isTelegramForMeter(Telegram *t, Meter *meter,
   }
 
   // Telegram addresses
-  std::string t_idsc = Address::concat(t->addresses);
   // Meter/MeterInfo address expressions
-  std::string m_idsc = AddressExpression::concat(address_expressions);
-  debug("(meter) %s: for me? %s in %s\n", name.c_str(), t_idsc.c_str(),
-        m_idsc.c_str());
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+  {
+    std::string t_idsc = Address::concat(t->addresses);
+    std::string m_idsc = AddressExpression::concat(address_expressions);
+    debug("(meter) %s: for me? %s in %s\n", name.c_str(), t_idsc.c_str(),
+          m_idsc.c_str());
+  }
+#endif
 
   bool used_wildcard = false;
   bool match = doesTelegramMatchExpressions(t->addresses, address_expressions,
@@ -780,9 +761,13 @@ bool MeterCommonImplementation::handleTelegram(
           index(), driverName().str().c_str(),
           t.addresses.back().str().c_str());
 
-  std::string msg = bin2hex(input_frame);
-  debug("(meter) %s %s \"%s\"\n", name().c_str(),
-        t.addresses.back().str().c_str(), msg.c_str());
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+  {
+    std::string msg = bin2hex(input_frame);
+    debug("(meter) %s %s \"%s\"\n", name().c_str(),
+          t.addresses.back().str().c_str(), msg.c_str());
+  }
+#endif
 
   // For older meters with manufacturer specific data without a nice 0f dif
   // marker.
@@ -812,9 +797,6 @@ bool MeterCommonImplementation::handleTelegram(
   processFieldCalculators();
 
   // All done....
-
-  // snprintf(log_prefix, 255, "(%s)", driverName().str().c_str());
-  // t.explainParse(log_prefix, 0);
 
   triggerUpdate(&t);
 
@@ -1103,27 +1085,6 @@ MeterCommonImplementation::renderJsonOnlyDefaultUnit(std::string vname,
   return fi->renderJsonOnlyDefaultUnit(this);
 }
 
-std::string MeterCommonImplementation::debugValues() {
-  std::string s;
-
-  for (auto &p : numeric_values_) {
-    std::string vname = p.first.first;
-    std::string us = unitToStringLowerCase(p.first.second);
-    NumericField &nf = p.second;
-
-    s += tostrprintf("%s_%s = %g\n", vname.c_str(), us.c_str(), nf.value);
-  }
-
-  for (auto &p : string_values_) {
-    std::string vname = p.first;
-    StringField &nf = p.second;
-
-    s += tostrprintf("%s = \"%s\"\n", vname.c_str(), nf.value.c_str());
-  }
-
-  return s;
-}
-
 FieldInfo::~FieldInfo() {}
 
 FieldInfo::FieldInfo(
@@ -1223,30 +1184,11 @@ std::string FieldInfo::renderJson(Meter *m, DVEntry *dve) {
   return s;
 }
 
-void MeterCommonImplementation::createMeterEnv(
-    std::string id, std::vector<std::string> *envs,
-    std::vector<std::string> *extra_constant_fields) {
-  envs->push_back(std::string("METER_ID=" + id));
-  envs->push_back(std::string("METER_NAME=") + name());
-  envs->push_back(std::string("METER_TYPE=") + driverName().str());
-
-  // If the configuration has supplied json_address=Roodroad 123
-  // then the env variable METER_address will available and have the content
-  // "Roodroad 123"
-  for (std::string add_json : meterExtraConstantFields()) {
-    envs->push_back(std::string("METER_") + add_json);
-  }
-  for (std::string extra_field : *extra_constant_fields) {
-    envs->push_back(std::string("METER_") + extra_field);
-  }
-}
-
 void MeterCommonImplementation::printMeter(
     Telegram *t, std::string *human_readable, std::string *fields,
     char separator, std::string *json, std::vector<std::string> *envs,
     std::vector<std::string> *extra_constant_fields,
     std::vector<std::string> *selected_fields, bool pretty_print_json) {
-  bool first = !t->meter->hasReceivedFirstTelegram();
 
   if (human_readable)
     *human_readable = concatFields(this, t, '\t', field_infos_, true,
@@ -1299,15 +1241,6 @@ void MeterCommonImplementation::printMeter(
 
       std::string out = nf.field_info->renderJson(this, &nf.dv_entry);
       s += indent + out + "," + newline;
-
-      if (first && getDetailedFirst()) {
-        size_t pos = out.find("\":");
-        if (pos != std::string::npos) {
-          std::string rule = out.substr(0, pos) + "_field\":" +
-                             std::to_string(nf.field_info->index());
-          s += indent + rule + "," + newline;
-        }
-      }
     }
 
     for (auto &p : string_values_) {
@@ -1331,14 +1264,6 @@ void MeterCommonImplementation::printMeter(
           s += indent + out + "," + newline;
         }
       }
-      if (first && getDetailedFirst()) {
-        size_t pos = out.find("\":");
-        if (pos != std::string::npos) {
-          std::string rule = out.substr(0, pos) + "_field\":" +
-                             std::to_string(sf.field_info->index());
-          s += indent + rule + "," + newline;
-        }
-      }
     }
     s += indent + "\"timestamp\":\"" + datetimeOfUpdateRobot() + "\"";
 
@@ -1360,45 +1285,6 @@ void MeterCommonImplementation::printMeter(
     s += "}";
     *json = s;
   }
-
-  if (envs) {
-    createMeterEnv(id, envs, extra_constant_fields);
-
-    envs->push_back(std::string("METER_JSON=") + *json);
-    envs->push_back(std::string("METER_MEDIA=") + media);
-    envs->push_back(std::string("METER_TIMESTAMP=") + datetimeOfUpdateRobot());
-    envs->push_back(std::string("METER_TIMESTAMP_UTC=") +
-                    datetimeOfUpdateRobot());
-    envs->push_back(std::string("METER_TIMESTAMP_UT=") +
-                    unixTimestampOfUpdate());
-    envs->push_back(std::string("METER_TIMESTAMP_LT=") +
-                    datetimeOfUpdateHumanReadable());
-
-    for (FieldInfo &fi : field_infos_) {
-      if (fi.printProperties().hasHIDE())
-        continue;
-
-      std::string display_unit_s = unitToStringUpperCase(fi.displayUnit());
-      std::string var = fi.vname();
-      std::transform(var.begin(), var.end(), var.begin(), ::toupper);
-      if (fi.xuantity() == Quantity::Text) {
-        std::string envvar = "METER_" + var + "=" + getStringValue(&fi);
-        envs->push_back(envvar);
-      } else {
-        std::string envvar =
-            "METER_" + var + "_" + display_unit_s + "=" +
-            valueToString(getNumericValue(&fi, fi.displayUnit()),
-                          fi.displayUnit());
-        envs->push_back(envvar);
-      }
-    }
-
-    if (t->about.device != "") {
-      envs->push_back(std::string("METER_DEVICE=") + t->about.device);
-      envs->push_back(std::string("METER_RSSI_DBM=") +
-                      std::to_string(t->about.rssi_dbm));
-    }
-  }
 }
 
 void MeterCommonImplementation::setExpectedTPLSecurityMode(
@@ -1419,35 +1305,12 @@ ELLSecurityMode MeterCommonImplementation::expectedELLSecurityMode() {
   return expected_ell_sec_mode_;
 }
 
-void detectMeterDrivers(int manufacturer, int media, int version,
-                        std::vector<std::string> *drivers) {
-  for (DriverInfo *p : allDrivers()) {
-    if (p->detect(manufacturer, media, version)) {
-      drivers->push_back(p->name().str());
-    }
-  }
-}
-
 bool isMeterDriverValid(DriverName driver_name, int manufacturer, int media,
                         int version) {
   for (DriverInfo *p : allDrivers()) {
     if (p->detect(manufacturer, media, version)) {
       if (p->hasDriverName(driver_name))
         return true;
-    }
-  }
-
-  return false;
-}
-
-bool isMeterDriverReasonableForMedia(std::string driver_name, int media) {
-  if (media == 0x37)
-    return false; // Skip converter meter side since they do not give any useful
-                  // information.
-
-  for (DriverInfo *p : allDrivers()) {
-    if (p->name().str() == driver_name && p->isValidMedia(media)) {
-      return true;
     }
   }
 
@@ -2356,25 +2219,4 @@ PrintProperties toPrintProperties(std::string s) {
   }
 
   return bits;
-}
-
-char available_meter_types_[2048];
-
-const char *availableMeterTypes() {
-  if (available_meter_types_[0])
-    return available_meter_types_;
-
-#define X(m)                                                                   \
-  if (MeterType::m != MeterType::AutoMeter &&                                  \
-      MeterType::m != MeterType::UnknownMeter) {                               \
-    strcat(available_meter_types_, #m);                                        \
-    strcat(available_meter_types_, "\n");                                      \
-    assert(strlen(available_meter_types_) < 1024);                             \
-  }
-  LIST_OF_METER_TYPES
-#undef X
-
-  // Remove last ,
-  available_meter_types_[strlen(available_meter_types_) - 1] = 0;
-  return available_meter_types_;
 }
