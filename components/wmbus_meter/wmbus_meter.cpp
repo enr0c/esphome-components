@@ -83,24 +83,50 @@ void Meter::handle_frame(wmbus_radio::Frame *frame) {
   auto about =
       AboutTelegram(App.get_friendly_name(), frame->rssi(), FrameType::WMBUS);
 
-  std::vector<Address> adresses;
-  bool id_match = false;
-  auto telegram = std::make_unique<Telegram>();
+  // Quick address pre-check: parse only the DLL header to see if this frame is
+  // addressed to this meter, before committing to the expensive full parse
+  // (decryption + DV field extraction) which can take tens of milliseconds.
+  Telegram header_t;
+  header_t.about = about;
+  if (!header_t.parseHeader(frame->data()))
+    return;
 
-  this->meter->handleTelegram(about, frame->data(), false, &adresses, &id_match,
-                              telegram.get());
+  bool used_wildcard = false;
+  auto &aes = this->meter->addressExpressions();
+  if (!doesTelegramMatchExpressions(header_t.addresses, aes, &used_wildcard))
+    return;
 
-  if (id_match) {
-    ESP_LOGI(TAG, "Telegram matched %s (RSSI: %d dBm, mode: %s)", this->meter->name().c_str(), frame->rssi(),
-             toString(frame->link_mode()));
-    this->last_telegram = std::move(telegram);
-    this->defer([this]() {
-      this->on_telegram_callback_manager();
-      this->last_telegram = nullptr;
-    });
+  // Address matched. Mark the frame as handled now so Radio::loop() logs
+  // "Telegram handled by N handlers" at the end of this loop iteration —
+  // before our deferred parse runs.
+  frame->mark_as_handled();
 
-    frame->mark_as_handled();
-  }
+  // Defer the expensive full parse (decryption, DV extraction, field
+  // processing) to a later iteration of the main loop, giving other ESPHome
+  // components — especially the native API server — a chance to run first and
+  // preventing long-running loop() warnings on wmbus_radio.
+  this->defer(
+      [this, frame_data = frame->data(), rssi = frame->rssi(),
+       lm = frame->link_mode()]() {
+        auto about =
+            AboutTelegram(App.get_friendly_name(), rssi, FrameType::WMBUS);
+        std::vector<Address> addresses;
+        bool id_match = false;
+        auto telegram = std::make_unique<Telegram>();
+
+        this->meter->handleTelegram(about, frame_data, false, &addresses,
+                                    &id_match, telegram.get());
+
+        if (id_match) {
+          ESP_LOGI(TAG, "Telegram matched %s (RSSI: %d dBm, mode: %s)",
+                   this->meter->name().c_str(), rssi, toString(lm));
+          this->last_telegram = std::move(telegram);
+          this->defer([this]() {
+            this->on_telegram_callback_manager();
+            this->last_telegram = nullptr;
+          });
+        }
+      });
 }
 
 std::string Meter::as_json(bool pretty_print) {

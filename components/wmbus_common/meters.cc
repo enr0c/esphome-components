@@ -525,11 +525,15 @@ bool MeterCommonImplementation::isTelegramForMeter(Telegram *t, Meter *meter,
   }
 
   // Telegram addresses
-  std::string t_idsc = Address::concat(t->addresses);
   // Meter/MeterInfo address expressions
-  std::string m_idsc = AddressExpression::concat(address_expressions);
-  debug("(meter) %s: for me? %s in %s\n", name.c_str(), t_idsc.c_str(),
-        m_idsc.c_str());
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+  {
+    std::string t_idsc = Address::concat(t->addresses);
+    std::string m_idsc = AddressExpression::concat(address_expressions);
+    debug("(meter) %s: for me? %s in %s\n", name.c_str(), t_idsc.c_str(),
+          m_idsc.c_str());
+  }
+#endif
 
   bool used_wildcard = false;
   bool match = doesTelegramMatchExpressions(t->addresses, address_expressions,
@@ -757,9 +761,13 @@ bool MeterCommonImplementation::handleTelegram(
           index(), driverName().str().c_str(),
           t.addresses.back().str().c_str());
 
-  std::string msg = bin2hex(input_frame);
-  debug("(meter) %s %s \"%s\"\n", name().c_str(),
-        t.addresses.back().str().c_str(), msg.c_str());
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+  {
+    std::string msg = bin2hex(input_frame);
+    debug("(meter) %s %s \"%s\"\n", name().c_str(),
+          t.addresses.back().str().c_str(), msg.c_str());
+  }
+#endif
 
   // For older meters with manufacturer specific data without a nice 0f dif
   // marker.
