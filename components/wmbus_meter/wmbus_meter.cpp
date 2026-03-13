@@ -22,6 +22,7 @@ void Meter::set_meter_params(std::string id, std::string driver,
   for (auto linkMode : linkModes)
     this->link_modes_.addLinkMode(linkMode);
 }
+
 void Meter::set_radio(wmbus_radio::Radio *radio) {
   this->radio = radio;
   if (this->radio == nullptr) {
@@ -32,6 +33,56 @@ void Meter::set_radio(wmbus_radio::Radio *radio) {
   radio->add_frame_handler(
       [this](wmbus_radio::Frame *frame) { return this->handle_frame(frame); });
 }
+
+void Meter::setup() {
+  // Work queue: main loop posts frame data here; capacity 4 so that a short
+  // burst of frames from different meters doesn't get dropped immediately.
+  this->parse_work_queue_ = xQueueCreate(4, sizeof(ParseWork *));
+  // Result queue: parser posts matched results here; capacity 1 ensures the
+  // parser blocks (via result_consumed_sem_) until the main loop has finished
+  // reading ::Meter state before the next handleTelegram() write begins.
+  this->parse_result_queue_ = xQueueCreate(1, sizeof(ParseResult *));
+  // Binary semaphore initialised to 0 (taken). The parser waits on this after
+  // posting a result; the main loop gives it after consuming the result.
+  this->result_consumed_sem_ = xSemaphoreCreateBinary();
+
+  if (!this->parse_work_queue_ || !this->parse_result_queue_ ||
+      !this->result_consumed_sem_) {
+    ESP_LOGE(TAG, "Failed to create parser queues/semaphore");
+    this->mark_failed();
+    return;
+  }
+
+  if (xTaskCreate(Meter::parser_task, "wmbus_parse",
+                  8 * 1024, this, 1,
+                  &this->parser_task_handle_) != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create parser task");
+    this->mark_failed();
+  }
+}
+
+void Meter::loop() {
+  if (this->parse_result_queue_ == nullptr)
+    return;
+
+  ParseResult *result;
+  if (xQueueReceive(this->parse_result_queue_, &result, 0) != pdPASS)
+    return;
+
+  // The parser task is blocked on result_consumed_sem_, so ::Meter state is
+  // stable (no concurrent writes) for the duration of this block.
+  ESP_LOGI(TAG, "Telegram matched %s (RSSI: %d dBm, mode: %s)",
+           this->meter->name().c_str(), result->rssi, toString(result->lm));
+  this->last_telegram.reset(result->telegram);
+  delete result;
+
+  this->on_telegram_callback_manager();
+  this->last_telegram = nullptr;
+
+  // Allow the parser task to proceed with the next work item.
+  xSemaphoreGive(this->result_consumed_sem_);
+}
+
 void Meter::dump_config() {
   if (this->meter == nullptr) {
     ESP_LOGCONFIG(TAG, "wM-Bus Meter:");
@@ -71,21 +122,18 @@ std::string Meter::get_key() {
 }
 
 void Meter::handle_frame(wmbus_radio::Frame *frame) {
-  if (this->is_failed() || this->meter == nullptr)
+  if (this->is_failed() || this->meter == nullptr ||
+      this->parse_work_queue_ == nullptr)
     return;
 
-  if (!this->link_modes_.has(frame->link_mode())) {
-    ESP_LOGW(TAG, "Frame link mode %s not supported by meter %s",
-             toString(frame->link_mode()), this->meter->name().c_str());
+  if (!this->link_modes_.has(frame->link_mode()))
     return;
-  }
 
   auto about =
       AboutTelegram(App.get_friendly_name(), frame->rssi(), FrameType::WMBUS);
 
-  // Quick address pre-check: parse only the DLL header to see if this frame is
-  // addressed to this meter, before committing to the expensive full parse
-  // (decryption + DV field extraction) which can take tens of milliseconds.
+  // Quick DLL-header-only address pre-check (~1 ms) to avoid posting work for
+  // frames that clearly don't belong to this meter.
   Telegram header_t;
   header_t.about = about;
   if (!header_t.parseHeader(frame->data()))
@@ -96,37 +144,61 @@ void Meter::handle_frame(wmbus_radio::Frame *frame) {
   if (!doesTelegramMatchExpressions(header_t.addresses, aes, &used_wildcard))
     return;
 
-  // Address matched. Mark the frame as handled now so Radio::loop() logs
-  // "Telegram handled by N handlers" at the end of this loop iteration —
-  // before our deferred parse runs.
+  // Mark the frame as handled so Radio::loop() logs "Telegram handled by N
+  // handlers" at the end of this (fast) main-loop iteration.
   frame->mark_as_handled();
 
-  // Defer the expensive full parse (decryption, DV extraction, field
-  // processing) to a later iteration of the main loop, giving other ESPHome
-  // components — especially the native API server — a chance to run first and
-  // preventing long-running loop() warnings on wmbus_radio.
-  this->defer(
-      [this, frame_data = frame->data(), rssi = frame->rssi(),
-       lm = frame->link_mode()]() {
-        auto about =
-            AboutTelegram(App.get_friendly_name(), rssi, FrameType::WMBUS);
-        std::vector<Address> addresses;
-        bool id_match = false;
-        auto telegram = std::make_unique<Telegram>();
+  // Post raw frame data to the background parser task. Use a 0 timeout so
+  // this call never blocks the main loop; drop the frame if the work queue
+  // is momentarily full (extremely rare with capacity-4 queue).
+  auto *work = new ParseWork{frame->data(), App.get_friendly_name(),
+                             frame->rssi(), frame->link_mode()};
+  if (xQueueSend(this->parse_work_queue_, &work, 0) != pdTRUE) {
+    ESP_LOGW(TAG, "Parser work queue full, dropping frame for %s",
+             this->meter->name().c_str());
+    delete work;
+  }
+}
 
-        this->meter->handleTelegram(about, frame_data, false, &addresses,
-                                    &id_match, telegram.get());
+// Background FreeRTOS task: performs the expensive handleTelegram() (AES
+// decryption + DV field extraction) completely off the ESPHome main loop.
+void Meter::parser_task(void *pvParameters) {
+  Meter *self = static_cast<Meter *>(pvParameters);
+  while (true) {
+    ParseWork *work;
+    xQueueReceive(self->parse_work_queue_, &work, portMAX_DELAY);
 
-        if (id_match) {
-          ESP_LOGI(TAG, "Telegram matched %s (RSSI: %d dBm, mode: %s)",
-                   this->meter->name().c_str(), rssi, toString(lm));
-          this->last_telegram = std::move(telegram);
-          this->defer([this]() {
-            this->on_telegram_callback_manager();
-            this->last_telegram = nullptr;
-          });
-        }
-      });
+    int8_t rssi = work->rssi;
+    LinkMode lm = work->lm;
+    auto about =
+        AboutTelegram(work->friendly_name, rssi, FrameType::WMBUS);
+    // Move the frame bytes to avoid an extra copy; work is freed after parse.
+    std::vector<uchar> frame_data = std::move(work->frame_data);
+    delete work;
+
+    std::vector<Address> addresses;
+    bool id_match = false;
+    auto *telegram = new Telegram();
+
+    self->meter->handleTelegram(about, frame_data, false, &addresses,
+                                &id_match, telegram);
+
+    if (!id_match) {
+      delete telegram;
+      continue;
+    }
+
+    auto *result = new ParseResult{telegram, rssi, lm};
+    // Post to the result queue. portMAX_DELAY ensures the parser blocks here
+    // if the main loop has not yet consumed the previous result — preventing
+    // concurrent writes/reads of the ::Meter internal field storage.
+    xQueueSend(self->parse_result_queue_, &result, portMAX_DELAY);
+
+    // Wait until Meter::loop() has finished firing callbacks (reading ::Meter
+    // state) before this task is allowed to call handleTelegram() again
+    // (writing ::Meter state).
+    xSemaphoreTake(self->result_consumed_sem_, portMAX_DELAY);
+  }
 }
 
 std::string Meter::as_json(bool pretty_print) {
