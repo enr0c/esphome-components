@@ -37,7 +37,6 @@ RadioComponent = radio_ns.class_("Radio", cg.Component)
 RadioTransceiver = radio_ns.class_(
     "RadioTransceiver", spi.SPIDevice, cg.Component)
 Frame = radio_ns.class_("Frame")
-FrameOutputFormat = Frame.enum("OutputFormat")
 FramePtr = Frame.operator("ptr")
 FrameTrigger = radio_ns.class_(
     "FrameTrigger", automation.Trigger.template(FramePtr))

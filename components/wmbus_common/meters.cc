@@ -790,9 +790,6 @@ bool MeterCommonImplementation::handleTelegram(
 
   // All done....
 
-  // snprintf(log_prefix, 255, "(%s)", driverName().str().c_str());
-  // t.explainParse(log_prefix, 0);
-
   triggerUpdate(&t);
 
   if (out_analyzed != NULL)
