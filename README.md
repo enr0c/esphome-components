@@ -11,8 +11,7 @@ Previous versions:
 # TODO:
 - Add support for SX1262 (with limited frame length)
 - Prepare packages for ready made boards (like UltimateReader) with displays, leds etc.
-- Aggresive cleanup of wmbusmeters classes/structs
-- Refactor traces/logs
+- Aggressive cleanup of wmbusmeters classes/structs
 
 # DONE:
 - Add backward support for CC1101 with modern architecture
@@ -30,6 +29,10 @@ Previous versions:
 - Re-pull of wmbusmeters code from upstream
 - Reimplement TCP and UCP senders. Should be classes with common interface to use as action under Radio->on packet trigger
 - Reimplement HEX and RTLWMBUS formatter to use as parameter of TCP/UDP action
+- Refactor traces/logs:
+  - Moved unhandled telegram diagnostics from WARN to DEBUG level
+  - Wrapped expensive debug operations (header parsing, hex formatting) in compile-time `#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG` guard to eliminate CPU overhead at INFO level
+  - Fixed deprecated `status_set_error(const char*)` usage to use `LOG_STR()` wrapper
 
 
 # Usage example:
