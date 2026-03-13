@@ -11,7 +11,7 @@ Previous versions:
 # TODO:
 - Add support for SX1262 (with limited frame length)
 - Prepare packages for ready made boards (like UltimateReader) with displays, leds etc.
-- Aggressive cleanup of wmbusmeters classes/structs
+- Continue cleanup of wmbusmeters classes/structs (explanation system, remaining diagnostic functions)
 
 # DONE:
 - Add backward support for CC1101 with modern architecture
@@ -33,6 +33,16 @@ Previous versions:
   - Moved unhandled telegram diagnostics from WARN to DEBUG level
   - Wrapped expensive debug operations (header parsing, hex formatting) in compile-time `#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG` guard to eliminate CPU overhead at INFO level
   - Fixed deprecated `status_set_error(const char*)` usage to use `LOG_STR()` wrapper
+- Aggressive cleanup of wmbusmeters classes/structs:
+  - Removed CLI-specific enums: `LIST_OF_MBUS_DEVICES`/`BusDeviceType`, `TelegramFormat`, `DeviceMode`
+  - Removed unused state functions: `setIgnoreDuplicateTelegrams`, `setDetailedFirst`, `getDetailedFirst`
+  - Removed `SendBusContent` struct (bidirectional send, unused in ESPHome)
+  - Removed diagnostic-only functions: `ciType`, `cType`, `ccType`, `vifKey`, `vifUnit`, `checkMBusFrame`, `warned_for_telegram_before`
+  - Removed `Telegram::print`, `analyzeParse`, `autoDetectPossibleDrivers`, `explainParse`
+  - Removed private `printDLL/ELL/NWL/AFL/TPL` verbose logging methods
+  - Removed shell-related `Meter` interface methods: `addShellMeterAdded/Updated`, `shellCmdlines*`, `createMeterEnv`, `debugValues`
+  - Removed `shells`/`new_meter_shells` from `MeterInfo` struct
+  - Removed `detectMeterDrivers`, `isMeterDriverReasonableForMedia`, `availableMeterTypes`
 
 
 # Usage example:
