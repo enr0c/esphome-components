@@ -216,124 +216,6 @@ void Telegram::addAddressIdFirst(const std::vector<uchar>::iterator &pos) {
   addresses.push_back(a);
 }
 
-void Telegram::print() {
-  uchar a = 0, b = 0, c = 0, d = 0;
-  if (dll_id.size() >= 4) {
-    a = dll_id[0];
-    b = dll_id[1];
-    c = dll_id[2];
-    d = dll_id[3];
-  }
-  const char *enc = "";
-
-  if (ell_sec_mode != ELLSecurityMode::NoSecurity ||
-      tpl_sec_mode != TPLSecurityMode::NoSecurity) {
-    enc = " encrypted";
-  }
-
-  notice("Received telegram from: %02x%02x%02x%02x\n", a, b, c, d);
-  notice("          manufacturer: (%s) %s (0x%02x)\n",
-         manufacturerFlag(dll_mfct).c_str(), manufacturer(dll_mfct).c_str(),
-         dll_mfct);
-  notice("                  type: %s (0x%02x)%s\n",
-         mediaType(dll_type, dll_mfct).c_str(), dll_type, enc);
-
-  notice("                   ver: 0x%02x\n", dll_version);
-
-  if (tpl_id_found) {
-    notice("      Concerning meter: %02x%02x%02x%02x\n", tpl_id_b[3],
-           tpl_id_b[2], tpl_id_b[1], tpl_id_b[0]);
-    notice("          manufacturer: (%s) %s (0x%02x)\n",
-           manufacturerFlag(tpl_mfct).c_str(), manufacturer(tpl_mfct).c_str(),
-           tpl_mfct);
-    notice("                  type: %s (0x%02x)%s\n",
-           mediaType(tpl_type, dll_mfct).c_str(), tpl_type, enc);
-
-    notice("                   ver: 0x%02x\n", tpl_version);
-  }
-  if (about.device != "") {
-    notice("                device: %s\n", about.device.c_str());
-    notice("                  rssi: %d dBm\n", about.rssi_dbm);
-  }
-  std::string possible_drivers = autoDetectPossibleDrivers();
-  notice("                driver: %s\n", possible_drivers.c_str());
-}
-
-void Telegram::printDLL() {
-  if (about.type == FrameType::WMBUS) {
-    std::string possible_drivers = autoDetectPossibleDrivers();
-
-    std::string man = manufacturerFlag(dll_mfct);
-    verbose("(telegram) DLL L=%02x C=%02x (%s) M=%04x (%s) A=%02x%02x%02x%02x "
-            "VER=%02x TYPE=%02x (%s) (driver %s) DEV=%s RSSI=%d\n",
-            dll_len, dll_c, cType(dll_c).c_str(), dll_mfct, man.c_str(),
-            dll_id[0], dll_id[1], dll_id[2], dll_id[3], dll_version, dll_type,
-            mediaType(dll_type, dll_mfct).c_str(), possible_drivers.c_str(),
-            about.device.c_str(), about.rssi_dbm);
-  }
-
-  if (about.type == FrameType::MBUS) {
-    verbose("(telegram) DLL L=%02x C=%02x (%s) A=%02x\n", dll_len, dll_c,
-            cType(dll_c).c_str(), mbus_primary_address);
-  }
-}
-
-void Telegram::printELL() {
-  if (ell_ci == 0)
-    return;
-
-  std::string ell_cc_info = ccType(ell_cc);
-  verbose("(telegram) ELL CI=%02x CC=%02x (%s) ACC=%02x", ell_ci, ell_cc,
-          ell_cc_info.c_str(), ell_acc);
-
-  if (ell_ci == 0x8d || ell_ci == 0x8f) {
-    std::string ell_sn_info = toStringFromELLSN(ell_sn);
-
-    verbose(" SN=%02x%02x%02x%02x (%s) CRC=%02x%02x", ell_sn_b[0], ell_sn_b[1],
-            ell_sn_b[2], ell_sn_b[3], ell_sn_info.c_str(), ell_pl_crc_b[0],
-            ell_pl_crc_b[1]);
-  }
-  if (ell_ci == 0x8e || ell_ci == 0x8f) {
-    std::string man = manufacturerFlag(ell_mfct);
-    verbose(" M=%02x%02x (%s) ID=%02x%02x%02x%02x", ell_mfct_b[0],
-            ell_mfct_b[1], man.c_str(), ell_id_b[0], ell_id_b[1], ell_id_b[2],
-            ell_id_b[3]);
-  }
-}
-
-void Telegram::printNWL() {
-  if (nwl_ci == 0)
-    return;
-
-  verbose("(telegram) NWL CI=%02x\n", nwl_ci);
-}
-
-void Telegram::printAFL() {
-  if (afl_ci == 0)
-    return;
-
-  verbose("(telegram) AFL CI=%02x\n", afl_ci);
-}
-
-void Telegram::printTPL() {
-  if (tpl_ci == 0)
-    return;
-
-  verbose("(telegram) TPL CI=%02x", tpl_ci);
-
-  if (tpl_ci == 0x6e || tpl_ci == 0x7a || tpl_ci == 0x72) {
-    std::string tpl_cfg_info = toStringFromTPLConfig(tpl_cfg);
-    verbose(" ACC=%02x STS=%02x CFG=%04x (%s)", tpl_acc, tpl_sts, tpl_cfg,
-            tpl_cfg_info.c_str());
-  }
-
-  if (tpl_ci == 0x72) {
-    std::string info = mediaType(tpl_type, tpl_mfct);
-    verbose(" ID=%02x%02x%02x%02x MFT=%02x%02x VER=%02x TYPE=%02x (%s)",
-            tpl_id_b[0], tpl_id_b[1], tpl_id_b[2], tpl_id_b[3], tpl_mfct_b[0],
-            tpl_mfct_b[1], tpl_version, tpl_type, info.c_str());
-  }
-}
 
 std::string manufacturer(int m_field) {
   for (auto &m : manufacturers_) {
@@ -686,210 +568,6 @@ bool isCiFieldManufacturerSpecific(int ci_field) {
   return ci_field >= 0xA0 && ci_field <= 0xB7;
 }
 
-std::string ciType(int ci_field) {
-  if (ci_field >= 0xA0 && ci_field <= 0xB7) {
-    return "Mfct specific";
-  }
-  if (ci_field >= 0x00 && ci_field <= 0x1f) {
-    return "Reserved for DLMS";
-  }
-
-  if (ci_field >= 0x20 && ci_field <= 0x4f) {
-    return "Reserved";
-  }
-
-  switch (ci_field) {
-  case 0x50:
-    return "Application reset or select to device (no tplh)";
-  case 0x51:
-    return "Command to device (no tplh)"; // Only for mbus, not wmbus.
-  case 0x52:
-    return "Selection of device (no tplh)";
-  case 0x53:
-    return "Application reset or select to device (long tplh)";
-  case 0x54:
-    return "Request of selected application to device (no tplh)";
-  case 0x55:
-    return "Request of selected application to device (long tplh)";
-  case 0x56:
-    return "Reserved";
-  case 0x57:
-    return "Reserved";
-  case 0x58:
-    return "Reserved";
-  case 0x59:
-    return "Reserved";
-  case 0x5a:
-    return "Command to device (short tplh)";
-  case 0x5b:
-    return "Command to device (long tplh)";
-  case 0x5c:
-    return "Sync action (no tplh)";
-  case 0x5d:
-    return "Reserved";
-  case 0x5e:
-    return "Reserved";
-  case 0x5f:
-    return "Specific usage";
-  case 0x60:
-    return "COSEM Data sent by the Readout device to the meter (long tplh)";
-  case 0x61:
-    return "COSEM Data sent by the Readout device to the meter (short tplh)";
-  case 0x62:
-    return "?";
-  case 0x63:
-    return "?";
-  case 0x64:
-    return "Reserved for OBIS-based Data sent by the Readout device to the "
-           "meter (long tplh)";
-  case 0x65:
-    return "Reserved for OBIS-based Data sent by the Readout device to the "
-           "meter (short tplh)";
-  case 0x66:
-    return "Response of selected application from device (no tplh)";
-  case 0x67:
-    return "Response of selected application from device (short tplh)";
-  case 0x68:
-    return "Response of selected application from device (long tplh)";
-  case 0x69:
-    return "EN 13757-3 Application Layer with Format frame (no tplh)";
-  case 0x6A:
-    return "EN 13757-3 Application Layer with Format frame (short tplh)";
-  case 0x6B:
-    return "EN 13757-3 Application Layer with Format frame (long tplh)";
-  case 0x6C:
-    return "Clock synchronisation (absolute) (long tplh)";
-  case 0x6D:
-    return "Clock synchronisation (relative) (long tplh)";
-  case 0x6E:
-    return "Application error from device (short tplh)";
-  case 0x6F:
-    return "Application error from device (long tplh)";
-  case 0x70:
-    return "Application error from device without Transport Layer";
-  case 0x71:
-    return "Reserved for Alarm Report";
-  case 0x72:
-    return "EN 13757-3 Application Layer (long tplh)";
-  case 0x73:
-    return "EN 13757-3 Application Layer with Compact frame and long Transport "
-           "Layer";
-  case 0x74:
-    return "Alarm from device (short tplh)";
-  case 0x75:
-    return "Alarm from device (long tplh)";
-  case 0x76:
-    return "?";
-  case 0x77:
-    return "?";
-  case 0x78:
-    return "EN 13757-3 Application Layer (no tplh)";
-  case 0x79:
-    return "EN 13757-3 Application Layer with Compact frame (no tplh)";
-  case 0x7A:
-    return "EN 13757-3 Application Layer (short tplh)";
-  case 0x7B:
-    return "EN 13757-3 Application Layer with Compact frame (short tplh)";
-  case 0x7C:
-    return "COSEM Application Layer (long tplh)";
-  case 0x7D:
-    return "COSEM Application Layer (short tplh)";
-  case 0x7E:
-    return "Reserved for OBIS-based Application Layer (long tplh)";
-  case 0x7F:
-    return "Reserved for OBIS-based Application Layer (short tplh)";
-  case 0x80:
-    return "EN 13757-3 Transport Layer (long tplh) from other device to the "
-           "meter";
-
-  case 0x81:
-    return "Network Layer data";
-  case 0x82:
-    return "Network management data to device (short tplh)";
-  case 0x83:
-    return "Network Management data to device (no tplh)";
-  case 0x84:
-    return "Transport layer to device (compact frame) (long tplh)";
-  case 0x85:
-    return "Transport layer to device (format frame) (long tplh)";
-  case 0x86:
-    return "Extended Link Layer V (variable length)";
-  case 0x87:
-    return "Network management data from device (long tplh)";
-  case 0x88:
-    return "Network management data from device (short tplh)";
-  case 0x89:
-    return "Network management data from device (no tplh)";
-  case 0x8A:
-    return "EN 13757-3 Transport Layer (short tplh) from the meter to the "
-           "other device"; // No application layer, e.g. ACK
-  case 0x8B:
-    return "EN 13757-3 Transport Layer (long tplh) from the meter to the other "
-           "device"; // No application layer, e.g. ACK
-
-  case 0x8C:
-    return "ELL: Extended Link Layer I (2 Byte)"; // CC, ACC
-  case 0x8D:
-    return "ELL: Extended Link Layer II (8 Byte)"; // CC, ACC, SN, Payload CRC
-  case 0x8E:
-    return "ELL: Extended Link Layer III (10 Byte)"; // CC, ACC, M2, A2
-  case 0x8F:
-    return "ELL: Extended Link Layer IV (16 Byte)"; // CC, ACC, M2, A2, SN,
-                                                    // Payload CRC
-
-  case 0x90:
-    return "AFL: Authentication and Fragmentation Sublayer";
-  case 0x91:
-    return "Reserved";
-  case 0x92:
-    return "Reserved";
-  case 0x93:
-    return "Reserved";
-  case 0x94:
-    return "Reserved";
-  case 0x95:
-    return "Reserved";
-  case 0x96:
-    return "Reserved";
-  case 0x97:
-    return "Reserved";
-  case 0x98:
-    return "?";
-  case 0x99:
-    return "?";
-
-  case 0xB8:
-    return "Set baud rate to 300";
-  case 0xB9:
-    return "Set baud rate to 600";
-  case 0xBA:
-    return "Set baud rate to 1200";
-  case 0xBB:
-    return "Set baud rate to 2400";
-  case 0xBC:
-    return "Set baud rate to 4800";
-  case 0xBD:
-    return "Set baud rate to 9600";
-  case 0xBE:
-    return "Set baud rate to 19200";
-  case 0xBF:
-    return "Set baud rate to 38400";
-  case 0xC0:
-    return "Image transfer to device (long tplh)";
-  case 0xC1:
-    return "Image transfer from device (short tplh)";
-  case 0xC2:
-    return "Image transfer from device (long tplh)";
-  case 0xC3:
-    return "Security info transfer to device (long tplh)";
-  case 0xC4:
-    return "Security info transfer from device (short tplh)";
-  case 0xC5:
-    return "Security info transfer from device (long tplh)";
-  }
-  return "?";
-}
-
 void Telegram::addExplanationAndIncrementPos(std::vector<uchar>::iterator &pos,
                                              int len, KindOfData k,
                                              Understanding u, const char *fmt,
@@ -1076,8 +754,7 @@ bool Telegram::parseDLL(std::vector<uchar>::iterator &pos) {
 
   dll_c = *pos;
   addExplanationAndIncrementPos(pos, 1, KindOfData::PROTOCOL,
-                                Understanding::FULL, "%02x dll-c (%s)", dll_c,
-                                cType(dll_c).c_str());
+                                Understanding::FULL, "%02x dll-c", dll_c);
 
   CHECK(8)
   addAddressMfctFirst(pos);
@@ -1142,8 +819,8 @@ bool Telegram::parseELL(std::vector<uchar>::iterator &pos) {
   if (!isCiFieldOfType(ci_field, CI_TYPE::ELL))
     return true;
   addExplanationAndIncrementPos(pos, 1, KindOfData::PROTOCOL,
-                                Understanding::FULL, "%02x ell-ci-field (%s)",
-                                ci_field, ciType(ci_field).c_str());
+                                Understanding::FULL, "%02x ell-ci-field",
+                                ci_field);
   ell_ci = ci_field;
   int len = ciFieldLength(ell_ci);
 
@@ -1154,8 +831,7 @@ bool Telegram::parseELL(std::vector<uchar>::iterator &pos) {
 
   ell_cc = *pos;
   addExplanationAndIncrementPos(pos, 1, KindOfData::PROTOCOL,
-                                Understanding::FULL, "%02x ell-cc (%s)", ell_cc,
-                                ccType(ell_cc).c_str());
+                                Understanding::FULL, "%02x ell-cc", ell_cc);
 
   ell_acc = *pos;
   addExplanationAndIncrementPos(pos, 1, KindOfData::PROTOCOL,
@@ -1307,8 +983,8 @@ bool Telegram::parseNWL(std::vector<uchar>::iterator &pos) {
   if (!isCiFieldOfType(ci_field, CI_TYPE::NWL))
     return true;
   addExplanationAndIncrementPos(pos, 1, KindOfData::PROTOCOL,
-                                Understanding::FULL, "%02x nwl-ci-field (%s)",
-                                ci_field, ciType(ci_field).c_str());
+                                Understanding::FULL, "%02x nwl-ci-field",
+                                ci_field);
   nwl_ci = ci_field;
   // We have only seen 0x81 0x1d so far.
   int len = 1; // ciFieldLength(nwl_ci);
@@ -1339,8 +1015,8 @@ bool Telegram::parseAFL(std::vector<uchar>::iterator &pos) {
   if (!isCiFieldOfType(ci_field, CI_TYPE::AFL))
     return true;
   addExplanationAndIncrementPos(pos, 1, KindOfData::PROTOCOL,
-                                Understanding::FULL, "%02x afl-ci-field (%s)",
-                                ci_field, ciType(ci_field).c_str());
+                                Understanding::FULL, "%02x afl-ci-field",
+                                ci_field);
   afl_ci = ci_field;
 
   afl_len = *pos;
@@ -1696,7 +1372,6 @@ bool Telegram::checkMAC(std::vector<uchar> &frame,
     debug("(wmbus) mac ok!\n");
   } else {
     debug("(wmbus) mac NOT ok!\n");
-    explainParse("BADMAC", 0);
   }
   return ok;
 }
@@ -2062,8 +1737,8 @@ bool Telegram::parseTPL(std::vector<uchar>::iterator &pos) {
   tpl_start = pos;
 
   addExplanationAndIncrementPos(pos, 1, KindOfData::PROTOCOL,
-                                Understanding::FULL, "%02x tpl-ci-field (%s)",
-                                tpl_ci, ciType(tpl_ci).c_str());
+                                Understanding::FULL, "%02x tpl-ci-field",
+                                tpl_ci);
   int len = ciFieldLength(tpl_ci);
 
   if (remaining < len + 1 && !mfct_specific)
@@ -2212,8 +1887,6 @@ bool Telegram::parseWMBUS(std::vector<uchar> &input_frame, MeterKeys *mk,
   if (!ok)
     return false;
 
-  printDLL();
-
   //     ┌──────────────────────────────────────────────┐
   //     │                                              │
   //     │ Is this an ELL block?                        │
@@ -2224,7 +1897,6 @@ bool Telegram::parseWMBUS(std::vector<uchar> &input_frame, MeterKeys *mk,
   if (!ok)
     return false;
 
-  printELL();
   if (decryption_failed)
     return false;
 
@@ -2238,8 +1910,6 @@ bool Telegram::parseWMBUS(std::vector<uchar> &input_frame, MeterKeys *mk,
   if (!ok)
     return false;
 
-  printNWL();
-
   //     ┌──────────────────────────────────────────────┐
   //     │                                              │
   //     │ Is this an AFL block?                        │
@@ -2249,8 +1919,6 @@ bool Telegram::parseWMBUS(std::vector<uchar> &input_frame, MeterKeys *mk,
   ok = parseAFL(pos);
   if (!ok)
     return false;
-
-  printAFL();
 
   //     ┌──────────────────────────────────────────────┐
   //     │                                              │
@@ -2262,7 +1930,6 @@ bool Telegram::parseWMBUS(std::vector<uchar> &input_frame, MeterKeys *mk,
   if (!ok)
     return false;
 
-  printTPL();
   if (decryption_failed)
     return false;
 
@@ -2334,161 +2001,6 @@ bool Telegram::parseHAN(std::vector<uchar> &input_frame, MeterKeys *mk,
   return false;
 }
 
-void Telegram::explainParse(std::string intro, int from) {
-  for (auto &p : explanations) {
-    // Protocol or content?
-    const char *c = p.kind == KindOfData::PROTOCOL ? " " : "C";
-    const char *u = "?";
-    if (p.understanding == Understanding::FULL)
-      u = "!";
-    if (p.understanding == Understanding::PARTIAL)
-      u = "p";
-    if (p.understanding == Understanding::ENCRYPTED)
-      u = "E";
-    if (p.understanding == Understanding::COMPRESSED)
-      u = "C";
-
-    // Do not print ok for understood protocol, it is implicit.
-    // However if a protocol is not full understood then print p or ?.
-    if (p.kind == KindOfData::PROTOCOL &&
-        p.understanding == Understanding::FULL)
-      u = " ";
-
-    debug("%s %03d %s%s: %s\n", intro.c_str(), p.pos, c, u, p.info.c_str());
-  }
-}
-
-std::string renderAnalysisAsText(std::vector<Explanation> &explanations,
-                                 OutputFormat of) {
-  std::string s;
-
-  const char *green;
-  const char *yellow;
-  const char *red;
-  const char *reset;
-
-  if (of == OutputFormat::TERMINAL) {
-    green = "\033[0;97m\033[1;42m";
-    yellow = "\033[0;97m\033[0;43m";
-    red = "\033[0;97m\033[0;41m\033[1;37m";
-    reset = "\033[0m";
-  } else if (of == OutputFormat::HTML) {
-    green = "<span style=\"color:white;background-color:#008450;\">";
-    yellow = "<span style=\"color:white;background-color:#efb700;\">";
-    red = "<span style=\"color:white;background-color:#b81d13;\">";
-    reset = "</span>";
-  } else {
-    green = "";
-    yellow = "";
-    red = "";
-    reset = "";
-  }
-
-  for (auto &p : explanations) {
-    // Protocol or content?
-    const char *c = p.kind == KindOfData::PROTOCOL ? " " : "C";
-    const char *u = "?";
-    if (p.understanding == Understanding::FULL)
-      u = "!";
-    if (p.understanding == Understanding::PARTIAL)
-      u = "p";
-    if (p.understanding == Understanding::ENCRYPTED)
-      u = "E";
-    if (p.understanding == Understanding::COMPRESSED)
-      u = "C";
-
-    // Do not print ok for understood protocol, it is implicit.
-    // However if a protocol is not full understood then print p or ?.
-    if (p.kind == KindOfData::PROTOCOL &&
-        p.understanding == Understanding::FULL)
-      u = " ";
-
-    const char *pre;
-    const char *post = reset;
-
-    if (*u == '!') {
-      pre = green;
-    } else if (*u == 'p') {
-      pre = yellow;
-    } else if (*u == ' ') {
-      pre = "";
-      post = "";
-    } else {
-      pre = red;
-    }
-
-    s += tostrprintf("%03d %s%s: %s%s%s\n", p.pos, c, u, pre, p.info.c_str(),
-                     post);
-  }
-  return s;
-}
-
-std::string renderAnalysisAsJson(std::vector<Explanation> &explanations) {
-  return "{ \"TODO\": true }\n";
-}
-
-std::string Telegram::analyzeParse(OutputFormat format, int *content_length,
-                                   int *understood_content_length) {
-  int u = 0;
-  int l = 0;
-
-  sort(explanations.begin(), explanations.end(),
-       [](const Explanation &a, const Explanation &b) -> bool {
-         return a.pos < b.pos;
-       });
-
-  // Calculate how much is understood.
-  for (auto &e : explanations) {
-    if (e.kind == KindOfData::CONTENT) {
-      l += e.len;
-      if (e.understanding == Understanding::PARTIAL ||
-          e.understanding == Understanding::FULL) {
-        // Its content and we have at least some understanding.
-        u += e.len;
-      }
-    }
-  }
-  *content_length = l;
-  *understood_content_length = u;
-
-  switch (format) {
-  case OutputFormat::PLAIN:
-  case OutputFormat::HTML:
-  case OutputFormat::TERMINAL: {
-    return renderAnalysisAsText(explanations, format);
-    break;
-  }
-  case OutputFormat::JSON:
-    return renderAnalysisAsJson(explanations);
-    break;
-  case OutputFormat::NONE:
-    // Do nothing
-    return "";
-    break;
-  }
-  return "ERROR";
-}
-
-void detectMeterDrivers(int manufacturer, int media, int version,
-                        std::vector<std::string> *drivers);
-
-std::string Telegram::autoDetectPossibleDrivers() {
-  std::vector<std::string> drivers;
-  detectMeterDrivers(dll_mfct, dll_type, dll_version, &drivers);
-  if (tpl_id_found) {
-    detectMeterDrivers(tpl_mfct, tpl_type, tpl_version, &drivers);
-  }
-  std::string possibles;
-  for (std::string d : drivers)
-    possibles = possibles + d + " ";
-  if (possibles != "")
-    possibles.pop_back();
-  else
-    possibles = "unknown!";
-
-  return possibles;
-}
-
 const char *mbusCField(uchar c_field) {
   std::string s;
   switch (c_field) {
@@ -2523,53 +2035,6 @@ const char *mbusCiField(uchar c_field) {
   return "?";
 }
 
-std::string cType(int c_field) {
-  std::string s;
-  if (c_field & 0x80) {
-    s += "relayed ";
-  }
-
-  if (c_field & 0x40) {
-    s += "from meter ";
-  } else {
-    s += "to meter ";
-  }
-
-  int code = c_field & 0x0f;
-
-  switch (code) {
-  case 0x0:
-    s += "SND_NKE";
-    break; // to meter, link reset
-  case 0x3:
-    s += "SND_UD2";
-    break; // to meter, command = user data
-  case 0x4:
-    s += "SND_NR";
-    break; // from meter, unsolicited data, no response expected
-  case 0x5:
-    s += "SND_UD3";
-    break; // to multiple meters, command = user data, no response expected
-  case 0x6:
-    s += "SND_IR";
-    break; // from meter, installation request/data
-  case 0x7:
-    s += "ACC_NR";
-    break; // from meter, unsolicited offers to access the meter
-  case 0x8:
-    s += "ACC_DMD";
-    break; // from meter, unsolicited demand to access the meter
-  case 0xa:
-    s += "REQ_UD1";
-    break; // to meter, alarm request
-  case 0xb:
-    s += "REQ_UD2";
-    break; // to meter, data request
-  }
-
-  return s;
-}
-
 bool isValidWMBusCField(int c_field) {
   // These are the currently seen valid C fields for wmbus telegrams.
   // 0x46 is only from an ei6500 meter.... all else is ox44
@@ -2579,26 +2044,6 @@ bool isValidWMBusCField(int c_field) {
 }
 
 bool isValidMBusCField(int c_field) { return false; }
-
-std::string ccType(int cc_field) {
-  std::string s = "";
-  if (cc_field & CC_B_BIDIRECTIONAL_BIT)
-    s += "bidir ";
-  if (cc_field & CC_RD_RESPONSE_DELAY_BIT)
-    s += "fast_resp ";
-  else
-    s += "slow_resp ";
-  if (cc_field & CC_S_SYNCH_FRAME_BIT)
-    s += "sync ";
-  if (cc_field & CC_R_RELAYED_BIT)
-    s += "relayed "; // Relayed by a repeater
-  if (cc_field & CC_P_HIGH_PRIO_BIT)
-    s += "prio ";
-
-  if (s.size() > 0 && s.back() == ' ')
-    s.pop_back();
-  return s;
-}
 
 int difLenBytes(int dif) {
   int t = dif & 0x0f;
@@ -3431,368 +2876,6 @@ case 0x7F: // Manufacturer specific
   default:
     warning("(wmbus) warning: type 0x%x cannot be scaled!\n", vif);
     return -1;
-  }
-}
-
-std::string vifKey(int vif) {
-  int t = vif & 0x7f;
-
-  switch (t) {
-
-  case 0x00:
-  case 0x01:
-  case 0x02:
-  case 0x03:
-  case 0x04:
-  case 0x05:
-  case 0x06:
-  case 0x07:
-    return "energy";
-
-  case 0x08:
-  case 0x09:
-  case 0x0A:
-  case 0x0B:
-  case 0x0C:
-  case 0x0D:
-  case 0x0E:
-  case 0x0F:
-    return "energy";
-
-  case 0x10:
-  case 0x11:
-  case 0x12:
-  case 0x13:
-  case 0x14:
-  case 0x15:
-  case 0x16:
-  case 0x17:
-    return "volume";
-
-  case 0x18:
-  case 0x19:
-  case 0x1A:
-  case 0x1B:
-  case 0x1C:
-  case 0x1D:
-  case 0x1E:
-  case 0x1F:
-    return "mass";
-
-  case 0x20:
-  case 0x21:
-  case 0x22:
-  case 0x23:
-    return "on_time";
-
-  case 0x24:
-  case 0x25:
-  case 0x26:
-  case 0x27:
-    return "operating_time";
-
-  case 0x28:
-  case 0x29:
-  case 0x2A:
-  case 0x2B:
-  case 0x2C:
-  case 0x2D:
-  case 0x2E:
-  case 0x2F:
-    return "power";
-
-  case 0x30:
-  case 0x31:
-  case 0x32:
-  case 0x33:
-  case 0x34:
-  case 0x35:
-  case 0x36:
-  case 0x37:
-    return "power";
-
-  case 0x38:
-  case 0x39:
-  case 0x3A:
-  case 0x3B:
-  case 0x3C:
-  case 0x3D:
-  case 0x3E:
-  case 0x3F:
-    return "volume_flow";
-
-  case 0x40:
-  case 0x41:
-  case 0x42:
-  case 0x43:
-  case 0x44:
-  case 0x45:
-  case 0x46:
-  case 0x47:
-    return "volume_flow_ext";
-
-  case 0x48:
-  case 0x49:
-  case 0x4A:
-  case 0x4B:
-  case 0x4C:
-  case 0x4D:
-  case 0x4E:
-  case 0x4F:
-    return "volume_flow_ext";
-
-  case 0x50:
-  case 0x51:
-  case 0x52:
-  case 0x53:
-  case 0x54:
-  case 0x55:
-  case 0x56:
-  case 0x57:
-    return "mass_flow";
-
-  case 0x58:
-  case 0x59:
-  case 0x5A:
-  case 0x5B:
-    return "flow_temperature";
-
-  case 0x5C:
-  case 0x5D:
-  case 0x5E:
-  case 0x5F:
-    return "return_temperature";
-
-  case 0x60:
-  case 0x61:
-  case 0x62:
-  case 0x63:
-    return "temperature_difference";
-
-  case 0x64:
-  case 0x65:
-  case 0x66:
-  case 0x67:
-    return "external_temperature";
-
-  case 0x68:
-  case 0x69:
-  case 0x6A:
-  case 0x6B:
-    return "pressure";
-
-  case 0x6C:
-    return "date"; // Date type G
-  case 0x6E:
-    return "hca"; // Units for H.C.A.
-  case 0x6F:
-    return "reserved"; // Reserved
-
-  case 0x70:
-  case 0x71:
-  case 0x72:
-  case 0x73:
-    return "average_duration";
-
-  case 0x74:
-  case 0x75:
-  case 0x76:
-  case 0x77:
-    return "actual_duration";
-
-  case 0x78:
-    return "fabrication_no"; // Fabrication no
-  case 0x79:
-    return "enhanced_identification"; // Enhanced identification
-
-  case 0x7C: // VIF in following string (length in first byte)
-  case 0x7E: // Any VIF
-  case 0x7F: // Manufacturer specific
-
-  default:
-    warning("(wmbus) warning: generic type %d cannot be scaled!\n", t);
-    return "unknown";
-  }
-}
-
-std::string vifUnit(int vif) {
-  int t = vif & 0x7f;
-
-  switch (t) {
-
-  case 0x00:
-  case 0x01:
-  case 0x02:
-  case 0x03:
-  case 0x04:
-  case 0x05:
-  case 0x06:
-  case 0x07:
-    return "kwh";
-
-  case 0x08:
-  case 0x09:
-  case 0x0A:
-  case 0x0B:
-  case 0x0C:
-  case 0x0D:
-  case 0x0E:
-  case 0x0F:
-    return "MJ";
-
-  case 0x10:
-  case 0x11:
-  case 0x12:
-  case 0x13:
-  case 0x14:
-  case 0x15:
-  case 0x16:
-  case 0x17:
-    return "m3";
-
-  case 0x18:
-  case 0x19:
-  case 0x1A:
-  case 0x1B:
-  case 0x1C:
-  case 0x1D:
-  case 0x1E:
-  case 0x1F:
-    return "kg";
-
-  case 0x20:
-  case 0x21:
-  case 0x22:
-  case 0x23:
-  case 0x24:
-  case 0x25:
-  case 0x26:
-  case 0x27:
-    return "h";
-
-  case 0x28:
-  case 0x29:
-  case 0x2A:
-  case 0x2B:
-  case 0x2C:
-  case 0x2D:
-  case 0x2E:
-  case 0x2F:
-    return "kw";
-
-  case 0x30:
-  case 0x31:
-  case 0x32:
-  case 0x33:
-  case 0x34:
-  case 0x35:
-  case 0x36:
-  case 0x37:
-    return "MJ";
-
-  case 0x38:
-  case 0x39:
-  case 0x3A:
-  case 0x3B:
-  case 0x3C:
-  case 0x3D:
-  case 0x3E:
-  case 0x3F:
-    return "m3/h";
-
-  case 0x40:
-  case 0x41:
-  case 0x42:
-  case 0x43:
-  case 0x44:
-  case 0x45:
-  case 0x46:
-  case 0x47:
-    return "m3/h";
-
-  case 0x48:
-  case 0x49:
-  case 0x4A:
-  case 0x4B:
-  case 0x4C:
-  case 0x4D:
-  case 0x4E:
-  case 0x4F:
-    return "m3/h";
-
-  case 0x50:
-  case 0x51:
-  case 0x52:
-  case 0x53:
-  case 0x54:
-  case 0x55:
-  case 0x56:
-  case 0x57:
-    return "kg/h";
-
-  case 0x58:
-  case 0x59:
-  case 0x5A:
-  case 0x5B:
-    return "c";
-
-  case 0x5C:
-  case 0x5D:
-  case 0x5E:
-  case 0x5F:
-    return "c";
-
-  case 0x60:
-  case 0x61:
-  case 0x62:
-  case 0x63:
-    return "k";
-
-  case 0x64:
-  case 0x65:
-  case 0x66:
-  case 0x67:
-    return "c";
-
-  case 0x68:
-  case 0x69:
-  case 0x6A:
-  case 0x6B:
-    return "bar";
-
-  case 0x6C:
-    return ""; // Date type G
-  case 0x6D:
-    return ""; // ??
-  case 0x6E:
-    return ""; // Units for H.C.A.
-  case 0x6F:
-    return ""; // Reserved
-
-  case 0x70:
-  case 0x71:
-  case 0x72:
-  case 0x73:
-    return "h";
-
-  case 0x74:
-  case 0x75:
-  case 0x76:
-  case 0x77:
-    return "h";
-
-  case 0x78:
-    return ""; // Fabrication no
-  case 0x79:
-    return ""; // Enhanced identification
-
-  case 0x7C: // VIF in following string (length in first byte)
-  case 0x7E: // Any VIF
-  case 0x7F: // Manufacturer specific
-
-  default:
-    warning("(wmbus) warning: generic type %d cannot be scaled!\n", t);
-    return "unknown";
   }
 }
 
@@ -4679,18 +3762,6 @@ bool Telegram::findFormatBytesFromKnownMeterSignatures(
   return ok;
 }
 
-static bool ignore_duplicate_telegrams_ = false;
-
-void setIgnoreDuplicateTelegrams(bool idt) {
-  ignore_duplicate_telegrams_ = idt;
-}
-
-static bool detailed_first_ = false;
-
-void setDetailedFirst(bool df) { detailed_first_ = df; }
-
-bool getDetailedFirst() { return detailed_first_; }
-
 int toInt(TPLSecurityMode tsm) {
   switch (tsm) {
 
@@ -5102,99 +4173,6 @@ FrameStatus checkWMBusFrame(std::vector<uchar> &data, size_t *frame_length,
   return FullFrame;
 }
 
-FrameStatus checkMBusFrame(std::vector<uchar> &data, size_t *frame_length,
-                           int *payload_len_out, int *payload_offset,
-                           bool only_test) {
-  // Example:
-  // E5
-  // 68383868 start length 0x38 = 56
-  // 56 bytes of payload data:
-  // 080072840200102941011B010000000265AE084265C208B20165000002FB1A450142FB1A4C01B201FB1A00000C788402001002FD0F21000F
-  // 5E checksum
-  // 16 stop
-
-  debugPayload("(mbus) checkMBUSFrame\n", data);
-
-  if (data.size() > 0 && data[0] == 0xe5) {
-    // Single character confirmation frame.
-    if (only_test) {
-      // For testing purposes we require the frame to be a single char as well.
-      // This happens when we pass a frame on the command line or in a
-      // simulation file. Otherwise a normal wmbus telegram with length e5 will
-      // triggere this mbus command. (When reading from a serial line, we might
-      // have data coming after the e5, but then we know that we are talking
-      // mbus.)
-      if (data.size() != 1) {
-        return ErrorInFrame;
-      }
-    }
-    *payload_len_out = 1;
-    *payload_offset = 0;
-    *frame_length = 1;
-    if (!only_test) {
-      debug("(mbus) received E5 single byte frame.\n");
-    }
-    return FullFrame;
-  }
-  if (data.size() < 6) {
-    // 4 byte start, 1 checksum, 1 stop
-    if (!only_test) {
-      debug("(mbus) less than 6 bytes, partial frame\n");
-    }
-    return PartialFrame;
-  }
-  if (data[0] != 0x68 && data[3] != 0x68) {
-    if (!only_test) {
-      verbose("(mbus) no 0x68 byte found, clearing buffer.\n");
-      data.clear();
-    }
-    return ErrorInFrame;
-  }
-
-  if (data[1] != data[2]) {
-    if (!only_test) {
-      verbose("(mbus) lengths not matching, clearing buffer.\n");
-      data.clear();
-    }
-    return ErrorInFrame;
-  }
-  int payload_len = data[1];
-  *frame_length = payload_len + 4 + 1 + 1; // start(4)+cs(1)+stop(1)
-  if (data.size() < *frame_length) {
-    if (!only_test) {
-      debug("(mbus) not enough bytes, partial frame %d %d\n", data.size(),
-            *frame_length);
-    }
-    return PartialFrame;
-  }
-  uchar stop = data[*frame_length - 1];
-  if (stop != 0x16) {
-    warning(
-        "(mbus) stop byte (0x%02x) at pos %d is not 0x16, clearing buffer.\n",
-        stop, *frame_length - 1);
-    data.clear();
-    return ErrorInFrame;
-  }
-  uchar csc = 0;
-  for (size_t i = 4; i < (*frame_length - 2); ++i)
-    csc += data[i];
-  uchar cs = data[*frame_length - 2];
-  if (cs != csc) {
-    warning(
-        "(mbus) expected checksum 0x%02x but got 0x%02x, clearing buffer.\n",
-        csc, cs);
-    data.clear();
-    return ErrorInFrame;
-  }
-
-  *payload_len_out = *frame_length;
-  *payload_offset = 0;
-  if (!only_test) {
-    debug("(mbus) received full frame.\n");
-  }
-  return FullFrame;
-}
-
 std::string decodeTPLStatusByteOnlyStandardBits(uchar sts) {
   // Bits 0-4 are standard defined. Bits 5-7 are mfct specific.
   std::string s;
@@ -5264,104 +4242,6 @@ bool is_command(std::string b, std::string *cmd) {
   if (b.back() != ')')
     return false;
   *cmd = b.substr(4, b.length() - 5);
-  return true;
-}
-
-const char *toString(TelegramFormat format) {
-  if (format == TelegramFormat::WMBUS_C_FIELD)
-    return "wmbus_c_field";
-  if (format == TelegramFormat::WMBUS_CI_FIELD)
-    return "wmbus_ci_field";
-  if (format == TelegramFormat::MBUS_SHORT_FRAME)
-    return "mbus_short_frame";
-  if (format == TelegramFormat::MBUS_LONG_FRAME)
-    return "mbus_long_frame";
-
-  return "unknown";
-}
-
-TelegramFormat toTelegramFormat(const char *s) {
-  if (!strcmp(s, "wmbus_c_field"))
-    return TelegramFormat::WMBUS_C_FIELD;
-  if (!strcmp(s, "wmbus_ci_field"))
-    return TelegramFormat::WMBUS_CI_FIELD;
-  if (!strcmp(s, "mbus_short_frame"))
-    return TelegramFormat::MBUS_SHORT_FRAME;
-  if (!strcmp(s, "mbus_long_frame"))
-    return TelegramFormat::MBUS_LONG_FRAME;
-
-  return TelegramFormat::UNKNOWN;
-}
-
-const char *toString(DeviceMode mode) {
-  if (mode == DeviceMode::METER)
-    return "meter";
-  if (mode == DeviceMode::OTHER)
-    return "other";
-  return "unknown";
-}
-
-DeviceMode toDeviceMode(const char *s) {
-  if (!strcmp(s, "meter"))
-    return DeviceMode::METER;
-  if (!strcmp(s, "other"))
-    return DeviceMode::OTHER;
-
-  return DeviceMode::UNKNOWN;
-}
-
-bool SendBusContent::isLikely(const std::string &s) {
-  return s.rfind("send:", 0) == 0;
-}
-
-bool SendBusContent::parse(const std::string &s) {
-  bus = "";
-  content = "";
-  // Examples:
-  //
-  // send:LINK_MODE:FORMAT:BUS:DATA
-  //
-  // send:t2:c_field:OUTBUS:01020304050607
-  // send:t1:ci_field:OUTBUS:01020304050607
-  // send:mbus:short:OUTMBUS:001122
-  // send:mbus:long:OUTMBUS:001122
-  //     c1   c2   c3      c4
-
-  size_t c1 = s.find(":");
-  if (c1 == std::string::npos)
-    return false;
-  size_t c2 = s.find(":", c1 + 1);
-  if (c2 == std::string::npos)
-    return false;
-  size_t c3 = s.find(":", c2 + 1);
-  if (c3 == std::string::npos)
-    return false;
-  size_t c4 = s.find(":", c3 + 1);
-  if (c4 == std::string::npos)
-    return false;
-
-  std::string cmd = s.substr(0, c1);
-  if (cmd != "send")
-    return false;
-
-  link_mode = toLinkMode(s.substr(c1 + 1, c2 - c1 - 1).c_str());
-  if (link_mode == LinkMode::UNKNOWN)
-    return false;
-
-  format = toTelegramFormat(s.substr(c2 + 1, c3 - c2 - 1).c_str());
-  if (format == TelegramFormat::UNKNOWN)
-    return false;
-
-  bus = s.substr(c3 + 1, c4 - c3 - 1);
-  if (bus.size() == 0)
-    return false;
-
-  content = s.substr(c4 + 1);
-  if (content.size() == 0)
-    return false;
-  if (content.size() % 2 == 1)
-    return false;
-
   return true;
 }
 
