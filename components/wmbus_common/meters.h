@@ -64,17 +64,10 @@ private:
   std::string name_;
 };
 
-// Return a list of matching drivers, like: multical21
-void detectMeterDrivers(int manufacturer, int media, int version,
-                        std::vector<std::string> *drivers);
 // When entering the driver, check that the telegram is indeed known to be
 // compatible with the driver(type), if not then print a warning.
 bool isMeterDriverValid(DriverName driver_name, int manufacturer, int media,
                         int version);
-// For an unknown telegram, when analyzing check if the media type is reasonable
-// in relation to the driver. Ie. do not try to decode a door sensor telegram
-// with a water meter driver.
-bool isMeterDriverReasonableForMedia(std::string driver_name, int media);
 
 struct MeterInfo;
 bool isValidKey(const std::string &key, MeterInfo &mt);
@@ -94,8 +87,6 @@ struct MeterInfo {
   std::string key;              // Decryption key.
   LinkModeSet link_modes;
   int bps{}; // For mbus communication you need to know the baud rate.
-  std::vector<std::string> shells;
-  std::vector<std::string> new_meter_shells;
   std::vector<std::string>
       extra_constant_fields; // Additional static fields that are added to each
                              // message.
@@ -115,14 +106,12 @@ struct MeterInfo {
 
   MeterInfo(std::string b, std::string n, std::string e,
             std::vector<AddressExpression> aes, std::string k, LinkModeSet lms,
-            int baud, std::vector<std::string> &s, std::vector<std::string> &ms,
-            std::vector<std::string> &j, std::vector<std::string> &calcfs) {
+            int baud, std::vector<std::string> &j,
+            std::vector<std::string> &calcfs) {
     bus = b;
     name = n;
     extras = e, address_expressions = aes;
     key = k;
-    shells = s;
-    new_meter_shells = ms;
     extra_constant_fields = j;
     extra_calculated_fields = calcfs;
     link_modes = lms;
@@ -134,8 +123,6 @@ struct MeterInfo {
     name = "";
     address_expressions.clear();
     key = "";
-    shells.clear();
-    new_meter_shells.clear();
     extra_constant_fields.clear();
     extra_calculated_fields.clear();
     link_modes.clear();
@@ -467,8 +454,6 @@ struct Meter {
 
   virtual int numUpdates() = 0;
 
-  virtual void createMeterEnv(std::string id, std::vector<std::string> *envs,
-                              std::vector<std::string> *more_json) = 0;
   virtual void printMeter(Telegram *t, std::string *human_readable,
                           std::string *fields, char separator,
                           std::string *json, std::vector<std::string> *envs,
@@ -487,16 +472,10 @@ struct Meter {
   virtual MeterKeys *meterKeys() = 0;
 
   virtual void addExtraCalculatedField(std::string ecf) = 0;
-  virtual void addShellMeterAdded(std::string cmdline) = 0;
-  virtual void addShellMeterUpdated(std::string cmdline) = 0;
-  virtual std::vector<std::string> &shellCmdlinesMeterAdded() = 0;
-  virtual std::vector<std::string> &shellCmdlinesMeterUpdated() = 0;
 
   virtual FieldInfo *findFieldInfo(std::string vname, Quantity xuantity) = 0;
   virtual std::string renderJsonOnlyDefaultUnit(std::string vname,
                                                 Quantity xuantity) = 0;
-
-  virtual std::string debugValues() = 0;
 
   virtual ~Meter() = default;
 };
@@ -509,7 +488,5 @@ LinkModeSet toMeterLinkModeSet(const std::string &driver);
 struct Configuration;
 struct MeterInfo;
 std::shared_ptr<Meter> createMeter(MeterInfo *mi);
-
-const char *availableMeterTypes();
 
 #endif
