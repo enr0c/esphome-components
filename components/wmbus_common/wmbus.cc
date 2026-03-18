@@ -531,6 +531,7 @@ std::string mediaTypeJSON(int a_field_device_type, int m_field) {
   X(0x78, TPL_78, "TPL: no header APL follows", 0, CI_TYPE::TPL, "")           \
   X(0x79, TPL_79, "TPL: compact APL follows", 0, CI_TYPE::TPL, "")             \
   X(0x7A, TPL_7A, "TPL: short header APL follows", 0, CI_TYPE::TPL, "")        \
+  X(0xFE, TPL_FE, "TPL: short header APL follows (alternate)", 0, CI_TYPE::TPL, "") \
   X(0x81, NWL_81, "NWL: TPL or APL follows?", 0, CI_TYPE::NWL, "")             \
   X(0x8C, ELL_I, "ELL: I", 2, CI_TYPE::ELL, "CC, ACC")                         \
   X(0x8D, ELL_II, "ELL: II", 8, CI_TYPE::ELL, "CC, ACC, SN, Payload CRC")      \
@@ -1756,6 +1757,9 @@ bool Telegram::parseTPL(std::vector<uchar>::iterator &pos) {
   case CI_Field_Values::TPL_79:
     return parse_TPL_79(pos);
   case CI_Field_Values::TPL_7A:
+  case CI_Field_Values::TPL_FE:
+    // 0xFE is used by some manufacturers as an alternate short-header CI byte;
+    // it has the same 4-byte structure as 0x7A (acc, sts, cfg-word).
     return parse_TPL_7A(pos);
   default: {
     // A0 to B7 are manufacturer specific.
