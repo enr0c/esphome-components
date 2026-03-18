@@ -77,6 +77,12 @@ bool CC1101::is_frame_oriented() const {
   return true;
 }
 
+gpio::InterruptType CC1101::irq_interrupt_type() const {
+  // GDO0 is configured as RXFIFO_THR (IOCFG0=0x00): asserts HIGH when FIFO >= threshold.
+  // Use RISING_EDGE to wake the receiver task as soon as data fills the FIFO.
+  return gpio::INTERRUPT_RISING_EDGE;
+}
+
 void CC1101::set_gdo0_pin(InternalGPIOPin *pin) {
   this->gdo0_pin_ = pin;
 }
@@ -191,6 +197,13 @@ void CC1101::setup() {
     if (gdo0_initial == gdo0_rx && gdo2_initial == gdo2_rx) {
       ESP_LOGW(TAG, "GDO pins did not change state - check pin connections!");
     }
+  }
+  // Use GDO0 (FIFO threshold) as the interrupt pin so the receiver task is woken
+  // by hardware as soon as data fills the FIFO, instead of busy-polling every 2 ms.
+  // GDO0 is configured as RXFIFO_THR (IOCFG0=0x00): HIGH when FIFO >= threshold.
+  if (this->gdo0_pin_ != nullptr) {
+    this->irq_pin_ = this->gdo0_pin_;
+    ESP_LOGD(TAG, "GDO0 registered as IRQ pin (RISING_EDGE = FIFO threshold reached)");
   }
   ESP_LOGCONFIG(TAG, "CC1101 setup complete");
 }
@@ -550,6 +563,36 @@ bool CC1101::read_data_() {
     ESP_LOGW(TAG, "RX FIFO overflow during read, aborting frame");
     this->rx_state_ = RxLoopState::INIT_RX;
     return false;
+  }
+  // MARCSTATE fallback: if the chip has already returned to IDLE or RX_END the packet
+  // is complete. Drain whatever is left in the FIFO and treat it as frame end.
+  // This mirrors the errata workaround used in SzczepanLeon's implementation and
+  // makes reception robust even when GDO2 timing is imperfect.
+  if (this->bytes_received_ > 0) {
+    uint8_t marc = this->driver_->read_status(CC1101Status::MARCSTATE) & 0x1F;
+    constexpr uint8_t MARC_IDLE = static_cast<uint8_t>(CC1101State::IDLE);
+    constexpr uint8_t MARC_RX_END = 0x0E;
+    if (marc == MARC_IDLE || marc == MARC_RX_END) {
+      uint8_t remaining = this->driver_->read_status(CC1101Status::RXBYTES) & 0x7F;
+      if (remaining > 0) {
+        size_t to_drain = std::min(static_cast<size_t>(remaining),
+                                   this->expected_length_ - this->bytes_received_);
+        if (to_drain > 0 && this->rx_buffer_.size() + to_drain <= MAX_FRAME_SIZE) {
+          size_t old_size = this->rx_buffer_.size();
+          this->rx_buffer_.resize(old_size + to_drain);
+          this->driver_->read_rx_fifo(this->rx_buffer_.data() + old_size, to_drain);
+          this->bytes_received_ += to_drain;
+        }
+      }
+      if (this->bytes_received_ >= this->expected_length_) {
+        ESP_LOGD(TAG, "Frame complete via MARCSTATE (0x%02X): %zu bytes", marc, this->bytes_received_);
+        return true;
+      }
+      ESP_LOGW(TAG, "MARCSTATE end (0x%02X) but only %zu/%zu bytes received, discarding",
+               marc, this->bytes_received_, this->expected_length_);
+      this->rx_state_ = RxLoopState::INIT_RX;
+      return false;
+    }
   }
   uint8_t bytes_in_fifo = this->driver_->read_status(CC1101Status::RXBYTES) & 0x7F;
   if (bytes_in_fifo > 0) {

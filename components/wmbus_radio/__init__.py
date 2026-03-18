@@ -60,9 +60,11 @@ def validate_radio_config(config):
         # CC1101 has no hardware reset pin (uses software SRES strobe)
         if CONF_RESET_PIN in config:
             raise cv.Invalid(f"CC1101 does not have a hardware reset pin (uses software reset). Remove '{CONF_RESET_PIN}'")
-        # IRQ_PIN not used for CC1101
+        # IRQ_PIN not used in YAML for CC1101 - GDO0 is wired internally as the IRQ pin
         if CONF_IRQ_PIN in config:
-            raise cv.Invalid(f"CC1101 does not use '{CONF_IRQ_PIN}', use '{CONF_GDO0_PIN}' and '{CONF_GDO2_PIN}' instead")
+            raise cv.Invalid(f"CC1101 does not accept '{CONF_IRQ_PIN}' in YAML. "
+                             f"GDO0 is used as the interrupt source internally. "
+                             f"Use '{CONF_GDO0_PIN}' instead.")
     elif radio_type == "SX1276":
         # SX1276 requires reset and IRQ pins
         if CONF_RESET_PIN not in config:
