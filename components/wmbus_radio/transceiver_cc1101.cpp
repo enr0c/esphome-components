@@ -550,11 +550,17 @@ bool CC1101::read_data_() {
   if (!gdo2 && this->bytes_received_ > 0) {
     uint8_t bytes_in_fifo = this->driver_->read_status(CC1101Status::RXBYTES) & 0x7F;
     if (bytes_in_fifo > 0) {
-      ESP_LOGD(TAG, "GDO2 LOW detected, reading final %d bytes", bytes_in_fifo);
-      size_t old_size = this->rx_buffer_.size();
-      this->rx_buffer_.resize(old_size + bytes_in_fifo);
-      this->driver_->read_rx_fifo(this->rx_buffer_.data() + old_size, bytes_in_fifo);
-      this->bytes_received_ += bytes_in_fifo;
+      // Cap reads to the remaining expected bytes so we never consume bytes that
+      // belong to the next frame (which may already be flowing into the FIFO).
+      size_t bytes_remaining = this->expected_length_ - this->bytes_received_;
+      size_t bytes_to_read = std::min(static_cast<size_t>(bytes_in_fifo), bytes_remaining);
+      if (bytes_to_read > 0) {
+        ESP_LOGD(TAG, "GDO2 LOW detected, reading final %zu bytes", bytes_to_read);
+        size_t old_size = this->rx_buffer_.size();
+        this->rx_buffer_.resize(old_size + bytes_to_read);
+        this->driver_->read_rx_fifo(this->rx_buffer_.data() + old_size, bytes_to_read);
+        this->bytes_received_ += bytes_to_read;
+      }
     }
     ESP_LOGD(TAG, "Frame complete via GDO2: %zu bytes", this->bytes_received_);
     return true;
@@ -573,15 +579,22 @@ bool CC1101::read_data_() {
     constexpr uint8_t MARC_IDLE = static_cast<uint8_t>(CC1101State::IDLE);
     constexpr uint8_t MARC_RX_END = 0x0E;
     if (marc == MARC_IDLE || marc == MARC_RX_END) {
-      uint8_t remaining = this->driver_->read_status(CC1101Status::RXBYTES) & 0x7F;
-      if (remaining > 0) {
-        size_t to_drain = std::min(static_cast<size_t>(remaining),
-                                   this->expected_length_ - this->bytes_received_);
-        if (to_drain > 0 && this->rx_buffer_.size() + to_drain <= MAX_FRAME_SIZE) {
-          size_t old_size = this->rx_buffer_.size();
-          this->rx_buffer_.resize(old_size + to_drain);
-          this->driver_->read_rx_fifo(this->rx_buffer_.data() + old_size, to_drain);
-          this->bytes_received_ += to_drain;
+      // CC1101 errata: the state machine can advance to IDLE while the last few bytes
+      // are still being written to the FIFO.  Retry reading RXBYTES a few times before
+      // declaring the frame incomplete.
+      for (int retry = 0; retry < MARCSTATE_RETRY_COUNT && this->bytes_received_ < this->expected_length_; retry++) {
+        uint8_t remaining = this->driver_->read_status(CC1101Status::RXBYTES) & 0x7F;
+        if (remaining > 0) {
+          size_t to_drain = std::min(static_cast<size_t>(remaining),
+                                     this->expected_length_ - this->bytes_received_);
+          if (to_drain > 0 && this->rx_buffer_.size() + to_drain <= MAX_FRAME_SIZE) {
+            size_t old_size = this->rx_buffer_.size();
+            this->rx_buffer_.resize(old_size + to_drain);
+            this->driver_->read_rx_fifo(this->rx_buffer_.data() + old_size, to_drain);
+            this->bytes_received_ += to_drain;
+          }
+        } else {
+          delayMicroseconds(MARCSTATE_RETRY_DELAY_US);
         }
       }
       if (this->bytes_received_ >= this->expected_length_) {
@@ -617,13 +630,8 @@ bool CC1101::read_data_() {
     }
   }
   if (this->bytes_received_ >= this->expected_length_) {
-    uint8_t bytes_in_fifo = this->driver_->read_status(CC1101Status::RXBYTES) & 0x7F;
-    if (bytes_in_fifo > 0) {
-      size_t old_size = this->rx_buffer_.size();
-      this->rx_buffer_.resize(old_size + bytes_in_fifo);
-      this->driver_->read_rx_fifo(this->rx_buffer_.data() + old_size,
-                                   bytes_in_fifo);
-    }
+    // Do NOT drain the FIFO further: any remaining bytes belong to the next frame.
+    // The FIFO will be flushed by init_rx_() before the next reception cycle.
     return true;
   }
   return false;
