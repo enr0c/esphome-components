@@ -51,8 +51,9 @@ void Radio::setup() {
 
 void Radio::wakeup_polling_receiver_task() {
   // Intentionally empty.
-  // For frame-oriented radios without an IRQ pin (e.g. CC1101), the receiver task
-  // polls based on get_polling_interval() and does not rely on task notifications.
+  // CC1101 now uses GDO0 as an interrupt pin (RISING_EDGE on FIFO threshold) so it
+  // no longer relies on periodic polling via this function.  It is retained for any
+  // future frame-oriented radio that truly has no interrupt capability.
 }
 
 void Radio::loop() {
@@ -133,6 +134,11 @@ void Radio::receive_frame() {
   if (!ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(timeout_ms))) {
     if (!is_frame_oriented) {
       ESP_LOGD(TAG, "Radio interrupt timeout");
+    } else if (use_interrupt) {
+      // Frame-oriented + IRQ: on timeout, still run the receiver as a safety net.
+      // This handles the tail bytes of a frame that fall below the FIFO threshold
+      // and would not trigger another GDO0 rising-edge interrupt on their own.
+      this->radio->run_receiver();
     }
     return;
   }

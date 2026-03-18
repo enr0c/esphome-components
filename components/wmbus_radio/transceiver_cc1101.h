@@ -51,6 +51,7 @@ public:
   int8_t get_rssi() override;
   const char *get_name() override;
   bool is_frame_oriented() const override;
+  gpio::InterruptType irq_interrupt_type() const override;
   void set_gdo0_pin(InternalGPIOPin *pin);
   void set_gdo2_pin(InternalGPIOPin *pin);
   void set_frequency(float freq_mhz);
