@@ -394,8 +394,8 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
     bool extension_vif = false;
     int combinable_full_vif = 0;
     bool combinable_extension_vif = false;
-    std::set<VIFCombinable> found_combinable_vifs;
-    std::set<uint16_t> found_combinable_vifs_raw;
+    std::vector<VIFCombinable> found_combinable_vifs;
+    std::vector<uint16_t> found_combinable_vifs_raw;
 
     DEBUG_PARSER("(dvparser debug) vif=%04x \"%s\"\n", vif,
                  vifType(vif).c_str());
@@ -499,8 +499,10 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
           combinable_full_vif |= (vife & 0x7f);
           combinable_extension_vif = false;
           VIFCombinable vc = toVIFCombinable(combinable_full_vif);
-          found_combinable_vifs.insert(vc);
-          found_combinable_vifs_raw.insert(combinable_full_vif);
+          if (std::find(found_combinable_vifs.begin(), found_combinable_vifs.end(), vc) == found_combinable_vifs.end())
+            found_combinable_vifs.push_back(vc);
+          if (std::find(found_combinable_vifs_raw.begin(), found_combinable_vifs_raw.end(), combinable_full_vif) == found_combinable_vifs_raw.end())
+            found_combinable_vifs_raw.push_back(combinable_full_vif);
 
           if (data_has_difvifs) {
             t->addExplanationAndIncrementPos(
@@ -521,8 +523,10 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
             }
           } else {
             VIFCombinable vc = toVIFCombinable(combinable_full_vif);
-            found_combinable_vifs.insert(vc);
-            found_combinable_vifs_raw.insert(combinable_full_vif);
+            if (std::find(found_combinable_vifs.begin(), found_combinable_vifs.end(), vc) == found_combinable_vifs.end())
+              found_combinable_vifs.push_back(vc);
+            if (std::find(found_combinable_vifs_raw.begin(), found_combinable_vifs_raw.end(), combinable_full_vif) == found_combinable_vifs_raw.end())
+              found_combinable_vifs_raw.push_back(combinable_full_vif);
 
             if (data_has_difvifs) {
               t->addExplanationAndIncrementPos(
@@ -1427,7 +1431,7 @@ bool FieldMatcher::matches(DVEntry &dv_entry) {
   // requested combinable raws. The raws are used for meters using reserved and
   // manufacturer specific vif combinables.
   for (uint16_t vcr : vif_combinables_raw) {
-    if (dv_entry.combinable_vifs_raw.count(vcr) == 0) {
+    if (std::find(dv_entry.combinable_vifs_raw.begin(), dv_entry.combinable_vifs_raw.end(), vcr) == dv_entry.combinable_vifs_raw.end()) {
       // Ouch, one of the requested vif combinables raw did not exist in the
       // dv_entry. No match!
       return false;
@@ -1438,7 +1442,7 @@ bool FieldMatcher::matches(DVEntry &dv_entry) {
   // requested combinables. The named vif combinables are used by well behaved
   // meters.
   for (VIFCombinable vc : vif_combinables) {
-    if (vc != VIFCombinable::Any && dv_entry.combinable_vifs.count(vc) == 0) {
+    if (vc != VIFCombinable::Any && std::find(dv_entry.combinable_vifs.begin(), dv_entry.combinable_vifs.end(), vc) == dv_entry.combinable_vifs.end()) {
       // Ouch, one of the requested combinables did not exist in the dv_entry.
       // No match!
       return false;
@@ -1448,10 +1452,10 @@ bool FieldMatcher::matches(DVEntry &dv_entry) {
   // Now if we have not selected the Any combinable match pattern,
   // then we need to check if there are unmatched combinables in the telegram,
   // if so fail the match.
-  if (vif_combinables.count(VIFCombinable::Any) == 0) {
+  if (std::find(vif_combinables.begin(), vif_combinables.end(), VIFCombinable::Any) == vif_combinables.end()) {
     if (vif_combinables.size() > 0) {
       for (VIFCombinable vc : dv_entry.combinable_vifs) {
-        if (vif_combinables.count(vc) == 0) {
+        if (std::find(vif_combinables.begin(), vif_combinables.end(), vc) == vif_combinables.end()) {
           // Oups, the telegram entry had a vif combinable that we had no
           // matcher for.
           return false;
@@ -1459,7 +1463,7 @@ bool FieldMatcher::matches(DVEntry &dv_entry) {
       }
     } else {
       for (uint16_t vcr : dv_entry.combinable_vifs_raw) {
-        if (vif_combinables_raw.count(vcr) == 0) {
+        if (std::find(vif_combinables_raw.begin(), vif_combinables_raw.end(), vcr) == vif_combinables_raw.end()) {
           // Oups, the telegram entry had a vif combinable raw that we had no
           // matcher for.
           return false;
