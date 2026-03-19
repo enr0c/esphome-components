@@ -449,7 +449,7 @@ public:
 
   // The actual content of the (w)mbus telegram. The DifVif entries.
   // Mapped from their key for quick access to their offset and content.
-  std::map<std::string, std::pair<int, DVEntry>> dv_entries;
+  DVEntryMap dv_entries;
 
   // part of original telegram bytes, only filled if pre-processing modifies it
   std::vector<uchar> original;

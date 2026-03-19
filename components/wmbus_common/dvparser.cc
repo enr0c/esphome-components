@@ -180,7 +180,7 @@ bool loadFormatBytesFromSignature(uint16_t format_signature,
 
 bool parseDV(Telegram *t, std::vector<uchar> &databytes,
              std::vector<uchar>::iterator data, size_t data_len,
-             std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+             DVEntryMap *dv_entries,
              std::vector<uchar>::iterator *format, size_t format_len,
              uint16_t *format_hash) {
   std::map<std::string, int> dv_count;
@@ -614,20 +614,20 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
   return true;
 }
 
-bool hasKey(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+bool hasKey(DVEntryMap *dv_entries,
             std::string key) {
   return dv_entries->count(key) > 0;
 }
 
 bool findKey(MeasurementType mit, VIFRange vif_range, StorageNr storagenr,
              TariffNr tariffnr, std::string *key,
-             std::map<std::string, std::pair<int, DVEntry>> *dv_entries) {
+             DVEntryMap *dv_entries) {
   return findKeyWithNr(mit, vif_range, storagenr, tariffnr, 1, key, dv_entries);
 }
 
 bool findKeyWithNr(MeasurementType mit, VIFRange vif_range, StorageNr storagenr,
                    TariffNr tariffnr, int nr, std::string *key,
-                   std::map<std::string, std::pair<int, DVEntry>> *dv_entries) {
+                   DVEntryMap *dv_entries) {
   /*debug("(dvparser) looking for type=%s vifrange=%s storagenr=%d
     tariffnr=%d\n", measurementTypeName(mit).c_str(), toString(vif_range),
     storagenr.intValue(), tariffnr.intValue());*/
@@ -708,7 +708,7 @@ void extractDV(std::string &s, uchar *dif, int *vif, bool *has_difes,
   }
 }
 
-bool extractDVuint8(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+bool extractDVuint8(DVEntryMap *dv_entries,
                     std::string key, int *offset, uchar *value) {
   if ((*dv_entries).count(key) == 0) {
     verbose("(dvparser) warning: cannot extract uint8 from non-existant key "
@@ -728,7 +728,7 @@ bool extractDVuint8(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
   return true;
 }
 
-bool extractDVuint16(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+bool extractDVuint16(DVEntryMap *dv_entries,
                      std::string key, int *offset, uint16_t *value) {
   if ((*dv_entries).count(key) == 0) {
     verbose("(dvparser) warning: cannot extract uint16 from non-existant key "
@@ -748,7 +748,7 @@ bool extractDVuint16(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
   return true;
 }
 
-bool extractDVuint24(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+bool extractDVuint24(DVEntryMap *dv_entries,
                      std::string key, int *offset, uint32_t *value) {
   if ((*dv_entries).count(key) == 0) {
     verbose("(dvparser) warning: cannot extract uint24 from non-existant key "
@@ -768,7 +768,7 @@ bool extractDVuint24(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
   return true;
 }
 
-bool extractDVuint32(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+bool extractDVuint32(DVEntryMap *dv_entries,
                      std::string key, int *offset, uint32_t *value) {
   if ((*dv_entries).count(key) == 0) {
     verbose("(dvparser) warning: cannot extract uint32 from non-existant key "
@@ -789,7 +789,7 @@ bool extractDVuint32(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
   return true;
 }
 
-bool extractDVdouble(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+bool extractDVdouble(DVEntryMap *dv_entries,
                      std::string key, int *offset, double *value,
                      bool auto_scale, bool force_unsigned) {
   if ((*dv_entries).count(key) == 0) {
@@ -1033,7 +1033,7 @@ bool DVEntry::extractDouble(double *out, bool auto_scale, bool force_unsigned) {
   return true;
 }
 
-bool extractDVlong(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+bool extractDVlong(DVEntryMap *dv_entries,
                    std::string key, int *offset, uint64_t *out) {
   if ((*dv_entries).count(key) == 0) {
     verbose("(dvparser) warning: cannot extract long from non-existant key "
@@ -1201,7 +1201,7 @@ bool DVEntry::extractLong(uint64_t *out) {
 }
 
 bool extractDVHexString(
-    std::map<std::string, std::pair<int, DVEntry>> *dv_entries, std::string key,
+    DVEntryMap *dv_entries, std::string key,
     int *offset, std::string *value) {
   if ((*dv_entries).count(key) == 0) {
     verbose("(dvparser) warning: cannot extract std::string from non-existant "
@@ -1218,7 +1218,7 @@ bool extractDVHexString(
 }
 
 bool extractDVReadableString(
-    std::map<std::string, std::pair<int, DVEntry>> *dv_entries, std::string key,
+    DVEntryMap *dv_entries, std::string key,
     int *offset, std::string *out) {
   if ((*dv_entries).count(key) == 0) {
     verbose("(dvparser) warning: cannot extract std::string from non-existant "
@@ -1331,7 +1331,7 @@ bool extractTime(uchar hi, uchar lo, struct tm *date) {
   return true;
 }
 
-bool extractDVdate(std::map<std::string, std::pair<int, DVEntry>> *dv_entries,
+bool extractDVdate(DVEntryMap *dv_entries,
                    std::string key, int *offset, struct tm *out) {
   if ((*dv_entries).count(key) == 0) {
     verbose("(dvparser) warning: cannot extract date from non-existant key "
