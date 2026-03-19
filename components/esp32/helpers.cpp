@@ -133,4 +133,14 @@ static void *esp32_new_impl(size_t size) {
 void *operator new(size_t size) { return esp32_new_impl(size); }
 void *operator new[](size_t size) { return esp32_new_impl(size); }
 
+// nothrow variants: callers using new(std::nothrow) expect nullptr on failure
+// rather than an exception.  On ESP-IDF exceptions are disabled anyway, so
+// return nullptr directly instead of routing through the exception path.
+void *operator new(size_t size, const std::nothrow_t &) noexcept {
+  return malloc(size);
+}
+void *operator new[](size_t size, const std::nothrow_t &) noexcept {
+  return malloc(size);
+}
+
 #endif  // USE_ESP32
