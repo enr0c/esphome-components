@@ -778,7 +778,7 @@ bool MeterCommonImplementation::handleTelegram(
   ok = t.parse(input_frame, &meter_keys_, true);
   if (!ok) {
     if (out_analyzed != NULL)
-      *out_analyzed = t;
+      *out_analyzed = std::move(t);
     // Ignoring telegram since it could not be parsed.
     return false;
   }
@@ -801,7 +801,7 @@ bool MeterCommonImplementation::handleTelegram(
   triggerUpdate(&t);
 
   if (out_analyzed != NULL)
-    *out_analyzed = t;
+    *out_analyzed = std::move(t);
   return true;
 }
 

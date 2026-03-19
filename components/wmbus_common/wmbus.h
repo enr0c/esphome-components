@@ -278,10 +278,12 @@ struct Meter;
 
 struct Telegram {
 private:
-  Telegram(Telegram &t) {}
+  Telegram(const Telegram&) = delete;
+  Telegram& operator=(const Telegram&) = delete;
 
 public:
-  Telegram() = default;
+  Telegram() { explanations.reserve(32); }
+  Telegram& operator=(Telegram&&) = default;
 
   AboutTelegram about;
 
