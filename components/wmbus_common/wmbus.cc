@@ -573,6 +573,11 @@ void Telegram::addExplanationAndIncrementPos(std::vector<uchar>::iterator &pos,
                                              int len, KindOfData k,
                                              Understanding u, const char *fmt,
                                              ...) {
+  // ESPHOME_LOG_LEVEL is always defined by ESPHome's build system.
+  // On ESP32 the explanations vector is never consumed, so skip the heap
+  // allocations entirely.  pos must still be advanced unconditionally so the
+  // caller's iterator remains correct.
+#ifndef ESPHOME_LOG_LEVEL
   char buf[1024];
   buf[1023] = 0;
 
@@ -584,12 +589,14 @@ void Telegram::addExplanationAndIncrementPos(std::vector<uchar>::iterator &pos,
   Explanation e(parsed.size(), len, buf, k, u);
   explanations.push_back(e);
   parsed.insert(parsed.end(), pos, pos + len);
+#endif
   pos += len;
 }
 
 void Telegram::setExplanation(std::vector<uchar>::iterator &pos, int len,
                               KindOfData k, Understanding u, const char *fmt,
                               ...) {
+#ifndef ESPHOME_LOG_LEVEL
   char buf[1024];
   buf[1023] = 0;
 
@@ -600,13 +607,17 @@ void Telegram::setExplanation(std::vector<uchar>::iterator &pos, int len,
 
   Explanation e(std::distance(frame.begin(), pos), len, buf, k, u);
   explanations.push_back(e);
+#endif
 }
 
 void Telegram::addMoreExplanation(int pos, std::string json) {
+#ifndef ESPHOME_LOG_LEVEL
   addMoreExplanation(pos, " (%s)", json.c_str());
+#endif
 }
 
 void Telegram::addMoreExplanation(int pos, const char *fmt, ...) {
+#ifndef ESPHOME_LOG_LEVEL
   char buf[1024];
 
   buf[1023] = 0;
@@ -633,10 +644,12 @@ void Telegram::addMoreExplanation(int pos, const char *fmt, ...) {
           "\"%s\"\n",
           pos, buf);
   }
+#endif
 }
 
 void Telegram::addSpecialExplanation(int offset, int len, KindOfData k,
                                      Understanding u, const char *fmt, ...) {
+#ifndef ESPHOME_LOG_LEVEL
   char buf[1024];
   buf[1023] = 0;
 
@@ -646,6 +659,7 @@ void Telegram::addSpecialExplanation(int offset, int len, KindOfData k,
   va_end(args);
 
   explanations.push_back({offset, len, buf, k, u});
+#endif
 }
 
 bool expectedMore(int line) {
