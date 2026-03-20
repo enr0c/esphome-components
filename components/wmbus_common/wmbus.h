@@ -282,7 +282,7 @@ private:
   Telegram& operator=(const Telegram&) = delete;
 
 public:
-  Telegram() { explanations.reserve(32); }
+  Telegram() = default;
   Telegram& operator=(Telegram&&) = default;
 
   AboutTelegram about;

@@ -21,6 +21,7 @@
 #include "units.h"
 #include "util.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -330,15 +331,15 @@ struct DVEntry {
   DifVifKey dif_vif_key;
   MeasurementType measurement_type;
   Vif vif;
-  std::set<VIFCombinable> combinable_vifs;
-  std::set<uint16_t> combinable_vifs_raw;
+  std::vector<VIFCombinable> combinable_vifs;
+  std::vector<uint16_t> combinable_vifs_raw;
   StorageNr storage_nr;
   TariffNr tariff_nr;
   SubUnitNr subunit_nr;
   std::string value;
 
   DVEntry(int off, DifVifKey dvk, MeasurementType mt, Vif vi,
-          std::set<VIFCombinable> vc, std::set<uint16_t> vc_raw, StorageNr st,
+          std::vector<VIFCombinable> vc, std::vector<uint16_t> vc_raw, StorageNr st,
           TariffNr ta, SubUnitNr su, std::string &val)
       : offset(off), dif_vif_key(dvk), measurement_type(mt), vif(vi),
         combinable_vifs(vc), combinable_vifs_raw(vc_raw), storage_nr(st),
@@ -374,7 +375,7 @@ struct DVEntryMap {
   using iterator = std::vector<Entry>::iterator;
   using const_iterator = std::vector<Entry>::const_iterator;
 
-  DVEntryMap() { entries_.reserve(24); }
+  DVEntryMap() = default;
 
   void clear() { entries_.clear(); }
 
@@ -435,8 +436,8 @@ struct FieldMatcher {
   uint16_t vif_raw{};
 
   // Match any vif combinables.
-  std::set<VIFCombinable> vif_combinables;
-  std::set<uint16_t> vif_combinables_raw;
+  std::vector<VIFCombinable> vif_combinables;
+  std::vector<uint16_t> vif_combinables_raw;
 
   // Match the storage nr. If no storage is specified, default to match only 0.
   bool match_storage_nr = true;
@@ -483,11 +484,13 @@ struct FieldMatcher {
     return *this;
   }
   FieldMatcher &add(VIFCombinable v) {
-    vif_combinables.insert(v);
+    if (std::find(vif_combinables.begin(), vif_combinables.end(), v) == vif_combinables.end())
+      vif_combinables.push_back(v);
     return *this;
   }
   FieldMatcher &add(VIFCombinableRaw v) {
-    vif_combinables_raw.insert(v.value);
+    if (std::find(vif_combinables_raw.begin(), vif_combinables_raw.end(), v.value) == vif_combinables_raw.end())
+      vif_combinables_raw.push_back(v.value);
     return *this;
   }
   FieldMatcher &set(StorageNr s) {
