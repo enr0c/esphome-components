@@ -248,6 +248,11 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
     if (*format == format_end)
       break;
 
+    if (dv_entries->size() >= DVEntryMap::MAX_ENTRIES) {
+      debug("(dvparser) warning: too many DV entries, aborting parse\n");
+      break;
+    }
+
     if (force_mfct_index != -1) {
       // This is an old meter without a proper 0f or other hear start
       // manufacturer data marker.

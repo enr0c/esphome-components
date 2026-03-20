@@ -375,9 +375,14 @@ struct DVEntryMap {
   using iterator = std::vector<Entry>::iterator;
   using const_iterator = std::vector<Entry>::const_iterator;
 
-  DVEntryMap() = default;
+  DVEntryMap() { entries_.reserve(24); }
 
-  void clear() { entries_.clear(); }
+  void clear() {
+    entries_.clear();
+    entries_.reserve(24);
+  }
+
+  size_t size() const { return entries_.size(); }
 
   iterator begin() { return entries_.begin(); }
   iterator end() { return entries_.end(); }
@@ -407,12 +412,20 @@ struct DVEntryMap {
   Value &operator[](const std::string &key) {
     for (size_t i = 0; i < entries_.size(); ++i)
       if (entries_[i].first == key) return entries_[i].second;
+    if (entries_.size() >= MAX_ENTRIES) {
+      debug("(dvparser) warning: DVEntryMap at capacity, dropping entry\n");
+      sentinel_ = Value{};
+      return sentinel_;
+    }
     entries_.push_back({key, Value{}});
     return entries_[entries_.size() - 1].second;
   }
 
+  static constexpr size_t MAX_ENTRIES = 64;
+
 private:
   std::vector<Entry> entries_;
+  Value sentinel_{};
 };
 
 struct FieldMatcher {
