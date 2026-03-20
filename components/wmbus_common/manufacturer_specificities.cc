@@ -356,7 +356,7 @@ void qdsExtractWalkByField(Telegram *t, Meter *driver, DVEntry &mfctEntry,
 
   DifVifKey key(key_s);
   DVEntry fieldEntry(0, key, MeasurementType::Instantaneous, key.vif(),
-                     std::set<VIFCombinable>(), std::set<uint16_t>(),
+                     std::vector<VIFCombinable>(), std::vector<uint16_t>(),
                      AnyStorageNr, AnyTariffNr, SubUnitNr(0), bytes);
 
   FieldInfo *fieldInfo = driver->findFieldInfo(fieldName, quantity);
