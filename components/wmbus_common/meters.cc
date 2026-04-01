@@ -739,7 +739,8 @@ std::string concatFields(Meter *m, Telegram *t, char c,
 bool MeterCommonImplementation::handleTelegram(
     AboutTelegram &about, std::vector<uchar> input_frame, bool simulated,
     std::vector<Address> *addresses, bool *id_match, Telegram *out_analyzed) {
-  Telegram t;
+  Telegram local_telegram;
+  Telegram &t = (out_analyzed != NULL) ? *out_analyzed : local_telegram;
   t.about = about;
   bool ok = t.parseHeader(input_frame);
 
@@ -777,8 +778,6 @@ bool MeterCommonImplementation::handleTelegram(
 
   ok = t.parse(input_frame, &meter_keys_, true);
   if (!ok) {
-    if (out_analyzed != NULL)
-      *out_analyzed = std::move(t);
     // Ignoring telegram since it could not be parsed.
     return false;
   }
@@ -800,8 +799,6 @@ bool MeterCommonImplementation::handleTelegram(
 
   triggerUpdate(&t);
 
-  if (out_analyzed != NULL)
-    *out_analyzed = std::move(t);
   return true;
 }
 
