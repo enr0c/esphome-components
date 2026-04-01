@@ -1,4 +1,5 @@
 #include "wmbus_meter.h"
+#include "esphome/components/wmbus_common/meters_common_implementation.h"
 
 namespace esphome {
 namespace wmbus_meter {
@@ -79,6 +80,16 @@ void Meter::handle_frame(wmbus_radio::Frame *frame) {
              toString(frame->link_mode()), this->meter->name().c_str());
     return;
   }
+
+  // Quick header-only check before allocating the full Telegram on the heap.
+  // This avoids expensive heap allocation for frames that don't match this meter.
+  Telegram header_check;
+  if (!header_check.parseHeader(frame->data()))
+    return;
+  // nullptr for MeterInfo is correct: isTelegramForMeter requires exactly one
+  // of meter or mi to be non-null; we supply meter, so mi must be nullptr.
+  if (!MeterCommonImplementation::isTelegramForMeter(&header_check, this->meter.get(), nullptr))
+    return;
 
   auto about =
       AboutTelegram(App.get_friendly_name(), frame->rssi(), FrameType::WMBUS);
