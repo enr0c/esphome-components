@@ -139,26 +139,27 @@ optional<std::string> Meter::get_string_field(std::string field_name) {
     return this->meter->getStringValue(field_info);
 
   // Fallback: try PointInTime (date/datetime) fields.
-  // Date fields like history_1_date have vname="history_1" with unit suffix "date".
-  // extractUnit() is used to validate the suffix and extract the vname; the extracted
-  // unit is intentionally ignored in favour of the field's registered displayUnit().
+  // Date fields like "history_1_date" are stored as numeric values keyed by
+  // (vname, unit), e.g. ("history_1", DateLT). findFieldInfo() cannot be used
+  // here because for template-based fields (e.g. "history_{storage_counter - 1
+  // counter}") it matches by fi->vname() which returns the raw template string,
+  // not the resolved instance name "history_1". Instead we mirror what the JSON
+  // generator does: extract vname and unit from the field name, verify the unit
+  // belongs to Quantity::PointInTime, then call getNumericValue(vname, unit)
+  // directly using the string-based overload.
   std::string vname;
   Unit unit;
-  if (extractUnit(field_name, &vname, &unit)) {
-    auto pit_field_info = this->meter->findFieldInfo(vname, Quantity::PointInTime);
-    if (pit_field_info) {
-      Unit display_unit = pit_field_info->displayUnit();
-      double value = this->meter->getNumericValue(pit_field_info, display_unit);
-      if (!std::isnan(value)) {
-        if (display_unit == Unit::DateLT)
-          return strdate(value);
-        if (display_unit == Unit::DateTimeLT)
-          return strdatetime(value);
-        if (display_unit == Unit::DateTimeUTC)
-          return strTimestampUTC(value);
-        // Covers Unit::TimeLT, Unit::UnixTimestamp and any future PointInTime units.
-        return valueToString(value, display_unit);
-      }
+  if (extractUnit(field_name, &vname, &unit) && toQuantity(unit) == Quantity::PointInTime) {
+    double value = this->meter->getNumericValue(vname, unit);
+    if (!std::isnan(value)) {
+      if (unit == Unit::DateLT)
+        return strdate(value);
+      if (unit == Unit::DateTimeLT)
+        return strdatetime(value);
+      if (unit == Unit::DateTimeUTC)
+        return strTimestampUTC(value);
+      // Covers Unit::TimeLT, Unit::UnixTimestamp and any future PointInTime units.
+      return valueToString(value, unit);
     }
   }
 
