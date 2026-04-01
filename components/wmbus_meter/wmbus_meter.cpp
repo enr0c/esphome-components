@@ -138,6 +138,30 @@ optional<std::string> Meter::get_string_field(std::string field_name) {
   if (field_info)
     return this->meter->getStringValue(field_info);
 
+  // Fallback: try PointInTime (date/datetime) fields.
+  // Date fields like history_1_date have vname="history_1" with unit suffix "date".
+  // extractUnit() is used to validate the suffix and extract the vname; the extracted
+  // unit is intentionally ignored in favour of the field's registered displayUnit().
+  std::string vname;
+  Unit unit;
+  if (extractUnit(field_name, &vname, &unit)) {
+    auto pit_field_info = this->meter->findFieldInfo(vname, Quantity::PointInTime);
+    if (pit_field_info) {
+      Unit display_unit = pit_field_info->displayUnit();
+      double value = this->meter->getNumericValue(pit_field_info, display_unit);
+      if (!std::isnan(value)) {
+        if (display_unit == Unit::DateLT)
+          return strdate(value);
+        if (display_unit == Unit::DateTimeLT)
+          return strdatetime(value);
+        if (display_unit == Unit::DateTimeUTC)
+          return strTimestampUTC(value);
+        // Covers Unit::TimeLT, Unit::UnixTimestamp and any future PointInTime units.
+        return valueToString(value, display_unit);
+      }
+    }
+  }
+
   return {};
 }
 
