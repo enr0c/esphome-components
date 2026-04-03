@@ -138,6 +138,31 @@ optional<std::string> Meter::get_string_field(std::string field_name) {
   if (field_info)
     return this->meter->getStringValue(field_info);
 
+  // Fallback: try PointInTime (date/datetime) fields.
+  // Date fields like "history_1_date" are stored as numeric values keyed by
+  // (vname, unit), e.g. ("history_1", DateLT). findFieldInfo() cannot be used
+  // here because for template-based fields (e.g. "history_{storage_counter - 1
+  // counter}") it matches by fi->vname() which returns the raw template string,
+  // not the resolved instance name "history_1". Instead we mirror what the JSON
+  // generator does: extract vname and unit from the field name, verify the unit
+  // belongs to Quantity::PointInTime, then call getNumericValue(vname, unit)
+  // directly using the string-based overload.
+  std::string vname;
+  Unit unit;
+  if (extractUnit(field_name, &vname, &unit) && toQuantity(unit) == Quantity::PointInTime) {
+    double value = this->meter->getNumericValue(vname, unit);
+    if (!std::isnan(value)) {
+      if (unit == Unit::DateLT)
+        return strdate(value);
+      if (unit == Unit::DateTimeLT)
+        return strdatetime(value);
+      if (unit == Unit::DateTimeUTC)
+        return strTimestampUTC(value);
+      // Covers Unit::TimeLT, Unit::UnixTimestamp and any future PointInTime units.
+      return valueToString(value, unit);
+    }
+  }
+
   return {};
 }
 
