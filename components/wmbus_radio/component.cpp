@@ -3,18 +3,6 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 
-#define ASSERT(expr, expected, before_exit)                                    \
-  {                                                                            \
-    auto result = (expr);                                                      \
-    if (!!result != expected) {                                                \
-      ESP_LOGE(TAG, "Assertion failed: %s", #expr);                            \
-      before_exit;                                                             \
-      return;                                                                  \
-    }                                                                          \
-  }
-
-#define ASSERT_SETUP(expr) ASSERT(expr, 1, this->mark_failed())
-
 namespace esphome {
 namespace wmbus_radio {
 static const char *TAG = "wmbus";
@@ -28,7 +16,12 @@ void Radio::set_radio(RadioTransceiver *radio) {
 }
 
 void Radio::setup() {
-  ASSERT_SETUP(this->packet_queue_ = xQueueCreate(3, sizeof(Packet *)));
+  this->packet_queue_ = xQueueCreate(3, sizeof(Packet *));
+  if (this->packet_queue_ == nullptr) {
+    ESP_LOGE(TAG, "Failed to create packet queue");
+    this->mark_failed();
+    return;
+  }
 
   if (this->radio == nullptr) {
     ESP_LOGE(TAG, "Radio transceiver is not configured");
@@ -44,8 +37,12 @@ void Radio::setup() {
     return;
   }
 
-  ASSERT_SETUP(xTaskCreate((TaskFunction_t)this->receiver_task, "radio_recv",
-                           3 * 1024, this, 2, &(this->receiver_task_handle_)));
+  if (xTaskCreate((TaskFunction_t)this->receiver_task, "radio_recv", 3 * 1024,
+                  this, 2, &(this->receiver_task_handle_)) != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create receiver task");
+    this->mark_failed();
+    return;
+  }
 
   ESP_LOGI(TAG, "Receiver task created [%p]", this->receiver_task_handle_);
 
