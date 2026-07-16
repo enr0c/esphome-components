@@ -4,7 +4,7 @@ import logging
 
 import esphome.config_validation as cv
 from esphome import codegen as cg
-from esphome.const import CONF_ID, SOURCE_FILE_EXTENSIONS
+from esphome.const import CONF_ID
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,12 +16,9 @@ WMBusCommon = wmbus_common_ns.class_("WMBusCommon", cg.Component)
 
 
 AVAILABLE_DRIVERS = {
-    f.stem.removeprefix("driver_") for f in Path(__file__).parent.glob("driver_*.cc")
+    f.stem.removeprefix("driver_")
+    for f in Path(__file__).parent.glob("driver_*.cpp")
 }
-
-# Allow loader/codegen to pick up C++ sources with .cc extension.
-# (wmbus_common uses many .cc files; ESPHome defaults don't always include it.)
-SOURCE_FILE_EXTENSIONS.add(".cc")
 
 
 def validate_driver(value):
