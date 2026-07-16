@@ -51,14 +51,14 @@ if not os.path.isdir(src_dir):
 
 selected = _get_selected_drivers(env)
 if not selected:
-    LOGGER.info("no selected drivers; leaving all driver_*.cc as-is")
+    LOGGER.info("no selected drivers; leaving all driver_*.cpp as-is")
     raise SystemExit(0)
 
 LOGGER.info("filtering drivers in %s", src_dir)
 
-include_files = {f"driver_{name}.cc" for name in selected}
-glob_off = os.path.join(src_dir, "driver_*.cc.off")
-glob_cc = os.path.join(src_dir, "driver_*.cc")
+include_files = {f"driver_{name}.cpp" for name in selected}
+glob_off = os.path.join(src_dir, "driver_*.cpp.off")
+glob_cpp = os.path.join(src_dir, "driver_*.cpp")
 
 off_before = len(glob(glob_off))
 restored_count = 0
@@ -69,7 +69,7 @@ for off_path in glob(glob_off):
 
 kept = []
 excluded_now = 0
-for path in glob(glob_cc):
+for path in glob(glob_cpp):
     base = os.path.basename(path)
     if base in include_files:
         kept.append(base)
@@ -77,7 +77,7 @@ for path in glob(glob_cc):
     if _rename(path, path + ".off"):
         excluded_now += 1
 
-# If the build dir is reused, many drivers can already be .cc.off, so excluded_now may be 0.
+# If the build dir is reused, many drivers can already be .cpp.off, so excluded_now may be 0.
 already_off = max(0, off_before - restored_count)
 LOGGER.info(
     "selected_drivers=%s kept=%s excluded_now=%d already_off=%d",
