@@ -14,6 +14,8 @@ esp32:
   board: esp32-c3-devkitm-1
   framework:
     type: esp-idf  # Required! CC1101 driver uses ESP-IDF
+  advanced:
+    loop_task_stack_size: 32768  # wmbus requires >8KB default; set to 32KB
 
 external_components:
   - source:

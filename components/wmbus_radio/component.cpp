@@ -3,6 +3,21 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 
+// wmbus components require substantial stack space for AES decryption, DV parsing, and
+// meter driver dispatch.  ESPHome >=2026.6 reduced the default loop task stack from 32 KB
+// to 8 KB, which is not enough and causes a LoadProhibited crash at boot.
+// Fix: add the following to your YAML config:
+//
+//   esp32:
+//     advanced:
+//       loop_task_stack_size: 32768
+//
+#ifdef ESPHOME_LOOP_TASK_STACK_SIZE
+static_assert(ESPHOME_LOOP_TASK_STACK_SIZE >= 16384,
+              "wmbus_radio requires a larger loop task stack. "
+              "Add 'loop_task_stack_size: 32768' under 'esp32: advanced:' in your YAML.");
+#endif
+
 namespace esphome {
 namespace wmbus_radio {
 static const char *TAG = "wmbus";

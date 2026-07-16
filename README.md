@@ -60,6 +60,8 @@ esp32:
   board: esp32dev
   framework:
     type: esp-idf
+  advanced:
+    loop_task_stack_size: 32768  # required: wmbus needs more than the 8KB default
 
 logger:
   level: DEBUG
@@ -100,6 +102,8 @@ esp32:
   flash_size: 8MB
   framework:
     type: esp-idf
+  advanced:
+    loop_task_stack_size: 32768  # required: wmbus needs more than the 8KB default
 
 logger:
   id: component_logger
