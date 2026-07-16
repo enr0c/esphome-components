@@ -321,3 +321,4 @@ namespace {
 // telegram=|4944B4092243658713077A7F000000_0C1363020400_046D242C1236_0F950A24042507000000A405006E0700850900CA0B004A0E00FFFFFFFFFFFF020000020000250000B3010095030000|
 // {"_":"telegram","media":"water","meter":"hydrodigit","name":"Hydro4","id":"87654322","April_total_m3":30.18,"August_total_m3":0.02,"December_total_m3":9.17,"February_total_m3":19.02,"January_total_m3":14.44,"July_total_m3":0,"June_total_m3":0,"March_total_m3":24.37,"May_total_m3":36.58,"November_total_m3":4.35,"October_total_m3":0.37,"September_total_m3":0.02,"backflow_m3":0.007,"meter_datetime":"2024-06-18 12:36","total_m3":40.263,"voltage_v":3.05,"contents":"Backflow, leak date, alarms and monthly data","leak_date":"25.04.2024","timestamp":"1111-11-11T11:11:11Z"}
 // |Hydro4;87654322;40.263;2024-06-18 12:36;1111-11-11 11:11.11
+void wmbus_anchor_driver_hydrodigit(void) {}

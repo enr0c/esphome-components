@@ -40,3 +40,4 @@ std::shared_ptr<Meter> createUnknown(MeterInfo &mi)
     di.setName("unknown");
     return std::shared_ptr<Meter>(new MeterUnknown(mi, di));
 }
+void wmbus_anchor_driver_unknown(void) {}
