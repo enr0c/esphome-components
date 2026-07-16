@@ -22,7 +22,7 @@ namespace
     struct Driver : public virtual MeterCommonImplementation
     {
         Driver(MeterInfo &mi, DriverInfo &di);
-        void processContent(Telegram *t);
+        void processContent(Telegram *t) override;
     };
 
     static bool ok = registerDriver([](DriverInfo&di)
