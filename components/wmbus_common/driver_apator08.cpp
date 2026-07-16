@@ -60,7 +60,7 @@ namespace
 
         if (content.size() < 4) return;
 
-        std::map<std::string,std::pair<int,DVEntry>> vendor_values;
+        DVEntryMap vendor_values;
 
         std::string total;
         strprintf(&total, "%02x%02x%02x%02x", content[0], content[1], content[2], content[3]);
