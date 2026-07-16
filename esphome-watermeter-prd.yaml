@@ -6,6 +6,8 @@ esp32:
   board: esp32dev
   framework:
     type: esp-idf
+  advanced:
+    loop_task_stack_size: 32768  # wmbus requires >8KB default; set to 32KB
 
 logger:
   level: DEBUG  # Debug level to show frame hex dumps
