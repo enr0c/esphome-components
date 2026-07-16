@@ -24,7 +24,7 @@ CONF_ON_TELEGRAM = "on_telegram"
 
 CODEOWNERS = ["@SzczepanLeon", "@kubasaw"]
 
-DEPENDENCIES = ["wmbus_radio"]
+DEPENDENCIES = ["wmbus_radio","wmbus_common"]
 AUTO_LOAD = ["sensor", "text_sensor"]
 
 MULTI_CONF = True

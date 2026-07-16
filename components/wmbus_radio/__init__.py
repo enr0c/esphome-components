@@ -21,7 +21,7 @@ from pathlib import Path
 
 CODEOWNERS = ["@SzczepanLeon", "@kubasaw"]
 
-DEPENDENCIES = ["esp32", "spi"]
+DEPENDENCIES = ["esp32", "spi", "wmbus_common"]
 
 AUTO_LOAD = ["wmbus_common"]
 
