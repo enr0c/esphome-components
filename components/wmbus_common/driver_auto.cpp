@@ -40,3 +40,4 @@ std::shared_ptr<Meter> createAuto(MeterInfo &mi)
     di.setName("auto");
     return std::shared_ptr<Meter>(new MeterAuto(mi, di));
 }
+void wmbus_anchor_driver_auto(void) {}

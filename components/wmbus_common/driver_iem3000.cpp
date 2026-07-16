@@ -1659,3 +1659,4 @@ namespace
 
     }
 }
+void wmbus_anchor_driver_iem3000(void) {}

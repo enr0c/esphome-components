@@ -81,3 +81,4 @@ namespace
     }
 
 }
+void wmbus_anchor_driver_wme5(void) {}
