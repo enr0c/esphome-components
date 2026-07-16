@@ -2,10 +2,10 @@ from pathlib import Path
 import shutil
 
 
-def _rename_drivers_to_cpp(component_dir: Path):
-    for path in component_dir.glob("driver_*.cc"):
+def _copy_cc_to_cpp(component_dir: Path):
+    for path in component_dir.glob("*.cc"):
         target = path.with_suffix(".cpp")
-        if not target.exists():
+        if not target.exists() or path.stat().st_mtime > target.stat().st_mtime:
             shutil.copyfile(path, target)
 
 
@@ -24,7 +24,7 @@ def _filter_driver_cpp_files(component_dir: Path, selected: set[str]):
 
 def main():
     component_dir = Path(__file__).resolve().parent
-    _rename_drivers_to_cpp(component_dir)
+    _copy_cc_to_cpp(component_dir)
 
     value = None
     try:
