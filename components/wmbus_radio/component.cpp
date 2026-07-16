@@ -7,7 +7,7 @@
   {                                                                            \
     auto result = (expr);                                                      \
     if (!!result != expected) {                                                \
-      ESP_LOGE(TAG, "Assertion failed: %s -> %p", #expr, (void *)(uintptr_t)(result));              \
+      ESP_LOGE(TAG, "Assertion failed: %s", #expr);                            \
       before_exit;                                                             \
       return;                                                                  \
     }                                                                          \
@@ -29,6 +29,12 @@ void Radio::set_radio(RadioTransceiver *radio) {
 
 void Radio::setup() {
   ASSERT_SETUP(this->packet_queue_ = xQueueCreate(3, sizeof(Packet *)));
+
+  if (this->radio == nullptr) {
+    ESP_LOGE(TAG, "Radio transceiver is not configured");
+    this->mark_failed();
+    return;
+  }
 
   this->radio->set_packet_queue(this->packet_queue_);
 
