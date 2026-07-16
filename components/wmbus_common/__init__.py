@@ -15,10 +15,14 @@ wmbus_common_ns = cg.esphome_ns.namespace("wmbus_common")
 WMBusCommon = wmbus_common_ns.class_("WMBusCommon", cg.Component)
 
 
-AVAILABLE_DRIVERS = {
-    f.stem.removeprefix("driver_")
-    for f in Path(__file__).parent.glob("driver_*.cpp")
-}
+def _driver_glob_names(pattern: str):
+    return {
+        f.stem.removeprefix("driver_")
+        for f in Path(__file__).parent.glob(pattern)
+    }
+
+
+AVAILABLE_DRIVERS = _driver_glob_names("driver_*.cpp") | _driver_glob_names("driver_*.cc")
 
 
 def validate_driver(value):
