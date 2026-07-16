@@ -120,7 +120,7 @@ namespace
         // simple wrapped inside a wmbus telegram since the ci-field is 0xa2.
         // Which means that the entire payload is manufacturer specific.
 
-        std::map<std::string,std::pair<int,DVEntry>> vendor_values;
+        DVEntryMap vendor_values;
         std::vector<uchar> content;
 
         t->extractPayload(&content);

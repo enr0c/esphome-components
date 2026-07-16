@@ -72,7 +72,7 @@ namespace
         std::vector<uchar> content;
         t->extractPayload(&content);
 
-        std::map<std::string,std::pair<int,DVEntry>> vendor_values;
+        DVEntryMap vendor_values;
 
         // The first 8 bytes are error flags and a date time.
         // E.g. 0F005B5996000000 therefore we skip the first 8 bytes.

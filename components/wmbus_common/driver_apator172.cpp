@@ -55,7 +55,7 @@ namespace
         // Overwrite the non-standard 0x11 with 0x07 which means water.
         t->dll_type = 0x07;
 
-        std::map<std::string,std::pair<int,DVEntry>> vendor_values;
+        DVEntryMap vendor_values;
 
         size_t i=0;
         if (i+4 < content.size())
