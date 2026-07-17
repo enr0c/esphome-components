@@ -23,7 +23,8 @@ esp32:
   board: esp32dev
   framework:
     type: esp-idf
-
+  toolchain: platformio
+  
 logger:
   level: INFO  # Debug level to show frame hex dumps
   tx_buffer_size: 2048  # Increase buffer to prevent log truncation
