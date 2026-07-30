@@ -375,7 +375,7 @@ struct DVEntryMap {
   using iterator = std::vector<Entry>::iterator;
   using const_iterator = std::vector<Entry>::const_iterator;
 
-  DVEntryMap() { entries_.reserve(8); }
+  DVEntryMap() { entries_.reserve(MAX_ENTRIES); }
 
   void clear() {
     entries_.clear();
