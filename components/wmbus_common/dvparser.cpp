@@ -25,6 +25,10 @@
 #include <math.h>
 #include <memory.h>
 
+#ifdef USE_ESP32
+#include <esp_heap_caps.h>
+#endif
+
 // The parser should not crash on invalid data, but yeah, when I
 // need to debug it because it crashes on invalid data, then
 // I enable the following define...
@@ -183,7 +187,17 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
              DVEntryMap *dv_entries,
              std::vector<uchar>::iterator *format, size_t format_len,
              uint16_t *format_hash) {
-  std::map<std::string, int> dv_count;
+#ifdef USE_ESP32
+  // Parsing allocates many small objects and, when it fails with bad_alloc on
+  // a nearly exhausted heap, even the exception allocation aborts the chip.
+  // Drop the telegram instead.
+  if (heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) < 8192) {
+    warning("(dvparser) low memory, dropping telegram (largest block %u, free %u)\n",
+            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_8BIT),
+            (unsigned) heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    return false;
+  }
+#endif
   std::vector<uchar> format_bytes;
   std::vector<uchar> id_bytes;
   std::vector<uchar> data_bytes;
@@ -552,12 +566,13 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
     }
     DEBUG_PARSER("(dvparser debug) key \"%s\"\n", dv.c_str());
 
-    int count = ++dv_count[dv];
-    if (count > 1) {
-      strprintf(&key, "%s_%d", dv.c_str(), count);
-    } else {
-      strprintf(&key, "%s", dv.c_str());
-    }
+    // Duplicate identifiers get a _N suffix; count them via the entry map
+    // instead of a separate std::map (one heap node per entry).
+    key = dv;
+    for (int count = 2;
+         dv_entries->count(key) > 0 && count <= (int) DVEntryMap::MAX_ENTRIES + 1;
+         count++)
+      key = dv + "_" + std::to_string(count);
     DEBUG_PARSER("(dvparser debug) DifVif key is %s\n", key.c_str());
 
     int remaining = std::distance(data, data_end);
@@ -578,7 +593,7 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
                  datalen);
     if (remaining < datalen) {
       debug("(dvparser) warning: unexpected end of data\n");
-      datalen = remaining - 1;
+      datalen = remaining > 0 ? remaining - 1 : 0;
     }
 
     std::string value = bin2hex(data, data_end, datalen);
