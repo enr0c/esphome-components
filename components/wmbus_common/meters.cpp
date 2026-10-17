@@ -1290,7 +1290,7 @@ void MeterCommonImplementation::printMeter(
       }
     s += newline;
     s += "}";
-    *json = s;
+    *json = std::move(s);
   }
 }
 
