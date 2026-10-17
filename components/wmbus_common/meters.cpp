@@ -1233,14 +1233,21 @@ void MeterCommonImplementation::printMeter(
         founds; // Multiple dventries can match to a single field info.
     std::set<std::string> found_vnames;
 
+    s.reserve(2048);
+    auto append_entry = [&](const std::string &entry) {
+      s += indent;
+      s += entry;
+      s += ',';
+      s += newline;
+    };
+
     for (auto &p : numeric_values_) {
       std::string vname = p.first.first;
       NumericField &nf = p.second;
       if (nf.field_info->printProperties().hasHIDE())
         continue;
 
-      std::string out = nf.field_info->renderJson(this, &nf.dv_entry);
-      s += indent + out + "," + newline;
+      append_entry(nf.field_info->renderJson(this, &nf.dv_entry));
     }
 
     for (auto &p : string_values_) {
@@ -1253,15 +1260,15 @@ void MeterCommonImplementation::printMeter(
       if (sf.field_info->printProperties().hasSTATUS()) {
         std::string in = getStatusField(sf.field_info);
         out = tostrprintf("\"%s\":\"%s\"", vname.c_str(), in.c_str());
-        s += indent + out + "," + newline;
+        append_entry(out);
       } else {
         if (sf.value == "null") {
           // The string "null" translates to actual json null.
           out = tostrprintf("\"%s\":null", vname.c_str());
-          s += indent + out + "," + newline;
+          append_entry(out);
         } else {
           out = tostrprintf("\"%s\":\"%s\"", vname.c_str(), sf.value.c_str());
-          s += indent + out + "," + newline;
+          append_entry(out);
         }
       }
     }
