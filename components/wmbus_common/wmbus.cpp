@@ -4095,10 +4095,9 @@ bool trimCRCsFrameFormatBInternal(std::vector<uchar> &payload,
   return true;
 }
 
-void removeAnyDLLCRCs(std::vector<uchar> &payload) {
-  bool trimmed = trimCRCsFrameFormatAInternal(payload, true);
-  if (!trimmed)
-    trimCRCsFrameFormatBInternal(payload, true);
+bool removeAnyDLLCRCs(std::vector<uchar> &payload) {
+  return trimCRCsFrameFormatAInternal(payload, true) ||
+         trimCRCsFrameFormatBInternal(payload, true);
 }
 
 bool trimCRCsFrameFormatA(std::vector<uchar> &payload) {
