@@ -4059,7 +4059,7 @@ bool trimCRCsFrameFormatBInternal(std::vector<uchar> &payload,
   }
 
   if (crc2_pos > 0) {
-    calc_crc = crc16_EN13757(&payload[crc1_pos + 2], crc2_pos);
+    calc_crc = crc16_EN13757(&payload[crc1_pos + 2], crc2_pos - crc1_pos - 2);
     check_crc = payload[crc2_pos] << 8 | payload[crc2_pos + 1];
 
     if (calc_crc != check_crc && !FUZZING) {

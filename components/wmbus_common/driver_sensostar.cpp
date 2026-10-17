@@ -28,7 +28,7 @@ namespace
     {
         di.setName("sensostar");
         di.setDefaultFields(
-            "name,id,meter_timestamp,total_kwh,power_kw,power_max_kw,flow_water_m3h,flow_water_max_m3h,"
+            "name,id,meter_datetime,total_kwh,power_kw,power_max_kw,flow_water_m3h,flow_water_max_m3h,"
             "forward_c,return_c,difference_c,total_water_m3,current_status,reporting_date,"
             "energy_consumption_at_reporting_date_kwh,"
             "target_kwh,target_date,"
@@ -41,6 +41,11 @@ namespace
             "consumption_7_months_ago_kwh,consumption_8_months_ago_kwh,consumption_9_months_ago_kwh,"
             "consumption_10_months_ago_kwh,consumption_11_months_ago_kwh,consumption_12_months_ago_kwh,"
             "consumption_13_months_ago_kwh,consumption_14_months_ago_kwh,consumption_15_months_ago_kwh,"
+            "fabrication_no,model_version,on_time_h,parameter_set,"
+            "total_tariff2_kwh,total_tariff3_kwh,"
+            "total_subunit1_m3,total_subunit2_m3,total_subunit3_m3,total_water_tariff2_m3,"
+            "target_water_m3,target_tariff2_kwh,target_tariff3_kwh,"
+            "target_subunit1_m3,target_subunit2_m3,target_subunit3_m3,"
             "timestamp");
         di.setMeterType(MeterType::HeatMeter);
         di.addLinkMode(LinkMode::C1);
@@ -51,14 +56,7 @@ namespace
 
     Driver::Driver(MeterInfo &mi, DriverInfo &di) : MeterCommonImplementation(mi, di)
     {
-        addStringFieldWithExtractor(
-            "meter_timestamp",
-            "Date time for this reading.",
-            DEFAULT_PRINT_PROPERTIES,
-            FieldMatcher::build()
-            .set(MeasurementType::Instantaneous)
-            .set(VIFRange::DateTime)
-            );
+        addOptionalLibraryFields("fabrication_no,meter_datetime,model_version,on_time_h,parameter_set");
 
         addNumericFieldWithExtractor(
             "total",
@@ -69,6 +67,80 @@ namespace
             FieldMatcher::build()
             .set(MeasurementType::Instantaneous)
             .set(VIFRange::AnyEnergyVIF)
+            );
+
+        addNumericFieldWithExtractor(
+            "total_tariff{tariff_counter}",
+            "The total heat energy consumption recorded by this meter on tariff 2-3.",
+            DEFAULT_PRINT_PROPERTIES,
+            Quantity::Energy,
+            VifScaling::Auto, DifSignedness::Signed,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::AnyEnergyVIF)
+            .set(TariffNr(2), TariffNr(3))
+            );
+
+        addNumericFieldWithExtractor(
+            "total_subunit{subunit_counter}",
+            "The total volume consumption recorded by this meter on subunit 1-3.",
+            DEFAULT_PRINT_PROPERTIES,
+            Quantity::Volume,
+            VifScaling::Auto, DifSignedness::Signed,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::Volume)
+            .set(SubUnitNr(1), SubUnitNr(3))
+            );
+
+        addNumericFieldWithExtractor(
+            "total_water_tariff2",
+            "The total volume of heating media recorded by this meter on tariff2.",
+            DEFAULT_PRINT_PROPERTIES,
+            Quantity::Volume,
+            VifScaling::Auto, DifSignedness::Signed,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::Volume)
+            .set(TariffNr(2))
+            );
+
+        addNumericFieldWithExtractor(
+            "target_water",
+            "The total volume of heating media as recorded at the end of the billing period.",
+            DEFAULT_PRINT_PROPERTIES,
+            Quantity::Volume,
+            VifScaling::Auto, DifSignedness::Signed,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::Volume)
+            .set(StorageNr(1))
+            );
+
+        addNumericFieldWithExtractor(
+            "target_tariff{tariff_counter}",
+            "The energy consumption at the last billing period date on tariff 2-3.",
+            DEFAULT_PRINT_PROPERTIES,
+            Quantity::Energy,
+            VifScaling::Auto, DifSignedness::Signed,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::AnyEnergyVIF)
+            .set(StorageNr(1))
+            .set(TariffNr(2), TariffNr(3))
+            );
+
+        addNumericFieldWithExtractor(
+            "target_subunit{subunit_counter}",
+            "The volume consumption at the last billing period date on subunit 1-3.",
+            DEFAULT_PRINT_PROPERTIES,
+            Quantity::Volume,
+            VifScaling::Auto, DifSignedness::Signed,
+            FieldMatcher::build()
+            .set(MeasurementType::Instantaneous)
+            .set(VIFRange::Volume)
+            .set(StorageNr(1))
+            .set(SubUnitNr(1), SubUnitNr(3))
             );
 
         addNumericFieldWithExtractor(
@@ -232,16 +304,15 @@ namespace
             );
 
         addNumericFieldWithExtractor(
-            "target_{tariff_counter}",
-            "Target energy values indexed by tariff counter.",
+            "target_{storage_counter}",
+            "Target energy values indexed by storage number.",
             DEFAULT_PRINT_PROPERTIES,
             Quantity::Energy,
             VifScaling::Auto, DifSignedness::Signed,
             FieldMatcher::build()
             .set(MeasurementType::Instantaneous)
             .set(VIFRange::AnyEnergyVIF)
-            .set(TariffNr(1), TariffNr(31))
-            .set(StorageNr(1))
+            .set(StorageNr(2), StorageNr(32))
             );
 
         for (int i=1; i<=15; ++i)
@@ -266,12 +337,12 @@ namespace
 // Test: Heat sensostar 20480057 NOKEY
 // Comment:
 // telegram=|68B3B36808007257004820c51400046c100000047839803801040600000000041300000000042B00000000142B00000000043B00000000143B00000000025B1400025f15000261daff02235c00046d2c2ddc24440600000000441300000000426c000001fd171003fd0c05000084200600000000c420060000000084300600000000c430060000000084401300000000c44013000000008480401300000000c48040130000000084c0401300000000c4c0401300000000a216|
-// {"media":"heat","meter":"sensostar","name":"Heat","id":"20480057","meter_timestamp":"2022-04-28 13:44","total_kwh":0,"power_kw":0,"power_max_kw":0,"flow_water_m3h":0,"flow_water_max_m3h":0,"forward_c":20,"return_c":21,"difference_c":-0.38,"total_water_m3":0,"current_status":"ERROR_FLOW_MEASUREMENT_SYSTEM_ERROR","reporting_date":"2000-00-00","energy_consumption_at_reporting_date_kwh":0,"consumption_1_months_ago_kwh":0,"timestamp":"1111-11-11T11:11:11Z"}
+// {"media":"heat","meter":"sensostar","name":"Heat","id":"20480057","meter_datetime":"2022-04-28 13:44","total_kwh":0,"power_kw":0,"power_max_kw":0,"flow_water_m3h":0,"flow_water_max_m3h":0,"forward_c":20,"return_c":21,"difference_c":-0.38,"total_water_m3":0,"current_status":"ERROR_FLOW_MEASUREMENT_SYSTEM_ERROR","reporting_date":"2000-00-00","energy_consumption_at_reporting_date_kwh":0,"consumption_1_months_ago_kwh":0,"timestamp":"1111-11-11T11:11:11Z"}
 // |Heat;20480057;0;0;ERROR_FLOW_MEASUREMENT_SYSTEM_ERROR;2000-00-00;0;1111-11-11 11:11.11
 
 // Test: WMZ sensostar 02752560 NOKEY
 // Comment: from "Sensostar U"
 //telegram=a444c5146025750200047ac20000202f2f046d2e26c62a040643160000041310f0050001fd1700426cbf2c4406570e00008401061f160000840206f6150000840306f5150000840406f3150000840506ea150000840606bf1500008407065214000084080692120000840906c5100000840a06570e0000840b06ca0b0000840c06da090000840d06ca080000840e06c8080000840f06c608000003fd0c05010002fd0b2111
-//{"media":"heat","meter":"sensostar","name":"WMZ","id":"02752560","meter_timestamp":"2022-10-06 06:46","total_kwh":5699,"total_water_m3":389.136,"current_status":"OK","reporting_date":"2021-12-31","energy_consumption_at_reporting_date_kwh":3671,"consumption_1_months_ago_kwh":5663,"consumption_2_months_ago_kwh":5622,"consumption_3_months_ago_kwh":5621,"consumption_4_months_ago_kwh":5619,"consumption_5_months_ago_kwh":5610,"consumption_6_months_ago_kwh":5567,"consumption_7_months_ago_kwh":5202,"consumption_8_months_ago_kwh":4754,"consumption_9_months_ago_kwh":4293,"consumption_10_months_ago_kwh":3671,"consumption_11_months_ago_kwh":3018,"consumption_12_months_ago_kwh":2522,"consumption_13_months_ago_kwh":2250,"consumption_14_months_ago_kwh":2248,"consumption_15_months_ago_kwh":2246,"timestamp":"1111-11-11 11:11.11"}
+//{"media":"heat","meter":"sensostar","name":"WMZ","id":"02752560","meter_datetime":"2022-10-06 06:46","total_kwh":5699,"total_water_m3":389.136,"current_status":"OK","reporting_date":"2021-12-31","energy_consumption_at_reporting_date_kwh":3671,"consumption_1_months_ago_kwh":5663,"consumption_2_months_ago_kwh":5622,"consumption_3_months_ago_kwh":5621,"consumption_4_months_ago_kwh":5619,"consumption_5_months_ago_kwh":5610,"consumption_6_months_ago_kwh":5567,"consumption_7_months_ago_kwh":5202,"consumption_8_months_ago_kwh":4754,"consumption_9_months_ago_kwh":4293,"consumption_10_months_ago_kwh":3671,"consumption_11_months_ago_kwh":3018,"consumption_12_months_ago_kwh":2522,"consumption_13_months_ago_kwh":2250,"consumption_14_months_ago_kwh":2248,"consumption_15_months_ago_kwh":2246,"timestamp":"1111-11-11 11:11.11"}
 //WMZ;02752560;5699;389.136000;OK;1111-11-11 11:11.11
 void wmbus_anchor_driver_sensostar(void) {}
