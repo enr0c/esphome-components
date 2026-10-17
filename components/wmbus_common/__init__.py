@@ -56,8 +56,9 @@ async def to_code(config):
 
     if selected_drivers:
         selected = ",".join(sorted(selected_drivers))
-        # Expose for C++ (defines.h) and for PlatformIO pre-build filtering.
-        cg.add_define("ESPHOME_WMBUS_INCLUDE_DRIVERS", selected)
+        # This define is also used during static driver registration, before
+        # the PlatformIO pre-build filter has a chance to run.
+        cg.add_define("ESPHOME_WMBUS_INCLUDE_DRIVERS", f'"{selected}"')
         cg.add_platformio_option("custom_wmbus_include_drivers", selected)
         LOGGER.info("wmbus_common: selected_drivers=%s", sorted(selected_drivers))
 

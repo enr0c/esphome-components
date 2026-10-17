@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <memory.h>
 #include <numeric>
@@ -31,6 +32,32 @@
 
 std::map<std::string, DriverInfo> *registered_drivers_ = NULL;
 std::vector<DriverInfo *> *registered_drivers_list_ = NULL;
+
+static bool isDriverSelectedForBuild(const std::string &name) {
+#ifdef ESPHOME_WMBUS_INCLUDE_DRIVERS
+  const char *selected = ESPHOME_WMBUS_INCLUDE_DRIVERS;
+  const char *entry = selected;
+
+  while (*entry != '\0') {
+    const char *separator = std::strchr(entry, ',');
+    const std::size_t entry_length =
+        separator == nullptr
+            ? std::strlen(entry)
+            : static_cast<std::size_t>(separator - entry);
+    if (name.size() == entry_length &&
+        name.compare(0, entry_length, entry, entry_length) == 0) {
+      return true;
+    }
+    if (separator == nullptr)
+      break;
+    entry = separator + 1;
+  }
+  return false;
+#else
+  (void) name;
+  return true;
+#endif
+}
 
 void verifyDriverLookupCreated() {
   if (registered_drivers_ == NULL) {
@@ -154,6 +181,11 @@ bool forceRegisterDriver(std::function<void(DriverInfo &)> setup) {
 bool registerDriver(std::function<void(DriverInfo &)> setup) {
   DriverInfo di;
   setup(di);
+
+  // Driver registration runs from static initializers, before ESPHome's
+  // logger is initialized. Ignore unselected drivers before duplicate checks.
+  if (!isDriverSelectedForBuild(di.name().str()))
+    return true;
 
   // Check that the driver name has not been registered before!
   assert(lookupDriver(di.name().str()) == NULL);
