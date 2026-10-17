@@ -146,7 +146,12 @@ std::optional<Frame> Packet::convert_to_frame() {
              this->data_.size());
   }
 
-  removeAnyDLLCRCs(this->data_);
+  if (!removeAnyDLLCRCs(this->data_)) {
+    ESP_LOGW(TAG, "DLL CRC check failed, dropping corrupted frame (RSSI: %d dBm)",
+             this->rssi_);
+    delete this;
+    return frame;
+  }
   int dummy;
   if (checkWMBusFrame(this->data_, (size_t *)&dummy, &dummy, &dummy, false) ==
       FrameStatus::FullFrame)
