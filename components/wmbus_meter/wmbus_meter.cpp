@@ -83,7 +83,7 @@ void Meter::handle_frame(wmbus_radio::Frame *frame) {
 
   // Quick header-only check before allocating the full Telegram on the heap.
   // This avoids expensive heap allocation for frames that don't match this meter.
-  Telegram header_check;
+  Telegram header_check(false);
   if (!header_check.parseHeader(frame->data()))
     return;
   // nullptr for MeterInfo is correct: isTelegramForMeter requires exactly one

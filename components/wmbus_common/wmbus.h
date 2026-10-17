@@ -283,6 +283,7 @@ private:
 
 public:
   Telegram() = default;
+  explicit Telegram(bool reserve_dv_entries) : dv_entries(reserve_dv_entries) {}
   Telegram& operator=(Telegram&&) = default;
 
   AboutTelegram about;
