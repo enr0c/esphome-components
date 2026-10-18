@@ -375,7 +375,7 @@ struct DVEntryMap {
   using iterator = std::vector<Entry>::iterator;
   using const_iterator = std::vector<Entry>::const_iterator;
 
-  DVEntryMap() : DVEntryMap(true) {}
+  DVEntryMap() : DVEntryMap(false) {}
   explicit DVEntryMap(bool reserve_entries) {
     if (reserve_entries)
       entries_.reserve(16);

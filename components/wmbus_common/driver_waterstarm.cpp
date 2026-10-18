@@ -79,7 +79,8 @@ namespace
             VifScaling::Auto, DifSignedness::Signed,
             FieldMatcher::build()
             .set(MeasurementType::Instantaneous)
-            .set(VIFRange::DateTime)
+            .set(VIFRange::DateTime),
+            Unit::DateTimeLT
             );
 
         addNumericFieldWithExtractor(
@@ -104,34 +105,6 @@ namespace
             .set(VIFRange::AnyVolumeVIF)
             .add(VIFCombinable::BackwardFlow)
             );
-
-        addStringFieldWithExtractorAndLookup(
-            "current_status",
-            "Status and error flags. (Deprecated use status instead.)",
-            DEFAULT_PRINT_PROPERTIES | PrintProperty::INCLUDE_TPL_STATUS | PrintProperty::STATUS | PrintProperty::DEPRECATED,
-            FieldMatcher::build()
-            .set(VIFRange::ErrorFlags),
-            {
-                {
-                    {
-                        "ERROR_FLAGS",
-                        Translate::MapType::BitToString,
-                        AlwaysTrigger, MaskBits(0xffff),
-                        "OK",
-                        {
-                            { 0x01, "SW_ERROR" },
-                            { 0x02, "CRC_ERROR" },
-                            { 0x04, "SENSOR_ERROR" },
-                            { 0x08, "MEASUREMENT_ERROR" },
-                            { 0x10, "BATTERY_VOLTAGE_ERROR" },
-                            { 0x20, "MANIPULATION" },
-                            { 0x40, "LEAKAGE_OR_NO_USAGE" },
-                            { 0x80, "REVERSE_FLOW" },
-                            { 0x100, "OVERLOAD" },
-                        }
-                    },
-                },
-            });
 
         addStringFieldWithExtractor(
             "meter_version",
