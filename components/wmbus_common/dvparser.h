@@ -375,7 +375,11 @@ struct DVEntryMap {
   using iterator = std::vector<Entry>::iterator;
   using const_iterator = std::vector<Entry>::const_iterator;
 
-  DVEntryMap() { entries_.reserve(8); }
+  DVEntryMap() : DVEntryMap(false) {}
+  explicit DVEntryMap(bool reserve_entries) {
+    if (reserve_entries)
+      entries_.reserve(16);
+  }
 
   void clear() {
     entries_.clear();
@@ -420,7 +424,7 @@ struct DVEntryMap {
     return entries_[entries_.size() - 1].second;
   }
 
-  static constexpr size_t MAX_ENTRIES = 64;
+  static constexpr size_t MAX_ENTRIES = 32;
 
 private:
   std::vector<Entry> entries_;

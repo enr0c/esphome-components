@@ -477,7 +477,7 @@ bool CC1101::wait_for_data_() {
     auto decoded_header = decode3of6(header_vec);
     if (decoded_header.has_value() && decoded_header->size() >= 1) {
       uint8_t decoded_l_field = (*decoded_header)[0];
-      if (decoded_l_field >= 10 && decoded_l_field <= 255) {
+      if (decoded_l_field >= 10) {
         this->wmbus_mode_ = WMBusMode::MODE_T;
         this->wmbus_block_ = WMBusBlock::BLOCK_A;
         this->length_field_ = decoded_l_field;

@@ -1,10 +1,9 @@
-import os
 from pathlib import Path
 import logging
 
 import esphome.config_validation as cv
 from esphome import codegen as cg
-from esphome.const import CONF_ID, SOURCE_FILE_EXTENSIONS
+from esphome.const import CONF_ID
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,12 +15,9 @@ WMBusCommon = wmbus_common_ns.class_("WMBusCommon", cg.Component)
 
 
 AVAILABLE_DRIVERS = {
-    f.stem.removeprefix("driver_") for f in Path(__file__).parent.glob("driver_*.cc")
+    f.stem.removeprefix("driver_") for f in Path(__file__).parent.glob("driver_*.cpp")
 }
-
-# Allow loader/codegen to pick up C++ sources with .cc extension.
-# (wmbus_common uses many .cc files; ESPHome defaults don't always include it.)
-SOURCE_FILE_EXTENSIONS.add(".cc")
+_selected_driver_names = set()
 
 
 def validate_driver(value):
@@ -36,9 +32,29 @@ def validate_driver(value):
 
 
 def _validate_drivers(value):
-    if value == "all":
-        return set(AVAILABLE_DRIVERS)
-    return value
+    drivers = set(AVAILABLE_DRIVERS) if value == "all" else set(value)
+    _selected_driver_names.update(drivers)
+    return drivers
+
+
+def FILTER_SOURCE_FILES():
+    if not _selected_driver_names:
+        LOGGER.info(
+            "wmbus_common: no driver selection; including all %d driver sources",
+            len(AVAILABLE_DRIVERS),
+        )
+        return set()
+    excluded = {
+        f"driver_{driver}.cpp"
+        for driver in AVAILABLE_DRIVERS - _selected_driver_names
+    }
+    LOGGER.info(
+        "wmbus_common: excluding %d of %d driver sources; selected=%s",
+        len(excluded),
+        len(AVAILABLE_DRIVERS),
+        sorted(_selected_driver_names),
+    )
+    return excluded
 
 
 CONFIG_SCHEMA = cv.Schema(
@@ -47,7 +63,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_DRIVERS, default=[]): cv.All(
             cv.Any(
                 "all",
-                cv.ensure_list(cv.one_of(*AVAILABLE_DRIVERS, lower=True, space="_")),
+                cv.ensure_list(validate_driver),
             ),
             _validate_drivers,
         ),
@@ -57,18 +73,24 @@ CONFIG_SCHEMA = cv.Schema(
 
 async def to_code(config):
     selected_drivers = set(config.get(CONF_DRIVERS, set()))
+    drivers_to_link = selected_drivers or AVAILABLE_DRIVERS
+    anchors = sorted(
+        f"wmbus_anchor_driver_{driver.replace('-', '_')}"
+        for driver in drivers_to_link
+    )
+    for anchor in anchors:
+        cg.add_global(cg.RawStatement(f"extern void {anchor}(void);"))
+    if anchors:
+        references = ", ".join(f"&{anchor}" for anchor in anchors)
+        cg.add_global(
+            cg.RawStatement(
+                "static void (*const wmbus_kept_drivers[])(void) "
+                f"__attribute__((used)) = {{{references}}};"
+            )
+        )
 
     if selected_drivers:
-        selected = ",".join(sorted(selected_drivers))
-        # Expose for C++ (defines.h) and for PlatformIO pre-build filtering.
-        cg.add_define("ESPHOME_WMBUS_INCLUDE_DRIVERS", selected)
-        cg.add_platformio_option("custom_wmbus_include_drivers", selected)
         LOGGER.info("wmbus_common: selected_drivers=%s", sorted(selected_drivers))
-
-    # Pre-build script physically disables non-selected drivers in the build tree.
-    script_path = os.path.join(os.path.dirname(__file__), "filter_wmbus_drivers.py")
-    if os.path.exists(script_path):
-        cg.add_platformio_option("extra_scripts", [f"pre:{script_path}"])
 
     var = cg.new_Pvariable(config[CONF_ID], sorted(selected_drivers))
     await cg.register_component(var, config)

@@ -43,12 +43,14 @@ void Meter::dump_config() {
 
   std::string id = this->get_id();
   std::string driver = this->get_driver();
-  std::string key = this->get_key();
+  MeterKeys *keys = this->meter->meterKeys();
 
   ESP_LOGCONFIG(TAG, "wM-Bus Meter:");
   ESP_LOGCONFIG(TAG, "  ID: 0x%s", id.c_str());
   ESP_LOGCONFIG(TAG, "  Driver: %s", driver.c_str());
-  ESP_LOGCONFIG(TAG, "  Key: %s", key.c_str());
+  ESP_LOGCONFIG(TAG, "  Key: %s",
+                keys->hasConfidentialityKey() ? "configured"
+                                              : "not configured");
 }
 
 std::string Meter::get_id() {
@@ -83,7 +85,7 @@ void Meter::handle_frame(wmbus_radio::Frame *frame) {
 
   // Quick header-only check before allocating the full Telegram on the heap.
   // This avoids expensive heap allocation for frames that don't match this meter.
-  Telegram header_check;
+  Telegram header_check(false);
   if (!header_check.parseHeader(frame->data()))
     return;
   // nullptr for MeterInfo is correct: isTelegramForMeter requires exactly one
