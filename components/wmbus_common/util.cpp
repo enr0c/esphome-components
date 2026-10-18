@@ -148,10 +148,11 @@ char const hexChar[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
 
 std::string bin2hex(const std::vector<uchar> &target) {
   std::string str;
+  str.reserve(target.size() * 2);
   for (size_t i = 0; i < target.size(); ++i) {
     const char ch = target[i];
-    str.append(&hexChar[(ch & 0xF0) >> 4], 1);
-    str.append(&hexChar[ch & 0xF], 1);
+    str.push_back(hexChar[(ch & 0xF0) >> 4]);
+    str.push_back(hexChar[ch & 0xF]);
   }
   return str;
 }
