@@ -3,17 +3,20 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 
-#define ASSERT(expr, expected, before_exit)                                    \
-  {                                                                            \
-    auto result = (expr);                                                      \
-    if (!!result != expected) {                                                \
-      ESP_LOGE(TAG, "Assertion failed: %s -> %d", #expr, result);              \
-      before_exit;                                                             \
-      return;                                                                  \
-    }                                                                          \
-  }
-
-#define ASSERT_SETUP(expr) ASSERT(expr, 1, this->mark_failed())
+// wmbus components require substantial stack space for AES decryption, DV parsing, and
+// meter driver dispatch.  ESPHome >=2026.6 reduced the default loop task stack from 32 KB
+// to 8 KB, which is not enough and causes a LoadProhibited crash at boot.
+// Fix: add the following to your YAML config:
+//
+//   esp32:
+//     advanced:
+//       loop_task_stack_size: 32768
+//
+#ifdef ESPHOME_LOOP_TASK_STACK_SIZE
+static_assert(ESPHOME_LOOP_TASK_STACK_SIZE >= 16384,
+              "wmbus_radio requires a larger loop task stack. "
+              "Add 'loop_task_stack_size: 32768' under 'esp32: advanced:' in your YAML.");
+#endif
 
 namespace esphome {
 namespace wmbus_radio {
@@ -28,7 +31,18 @@ void Radio::set_radio(RadioTransceiver *radio) {
 }
 
 void Radio::setup() {
-  ASSERT_SETUP(this->packet_queue_ = xQueueCreate(3, sizeof(Packet *)));
+  this->packet_queue_ = xQueueCreate(3, sizeof(Packet *));
+  if (this->packet_queue_ == nullptr) {
+    ESP_LOGE(TAG, "Failed to create packet queue");
+    this->mark_failed();
+    return;
+  }
+
+  if (this->radio == nullptr) {
+    ESP_LOGE(TAG, "Radio transceiver is not configured");
+    this->mark_failed();
+    return;
+  }
 
   this->radio->set_packet_queue(this->packet_queue_);
 
@@ -38,8 +52,12 @@ void Radio::setup() {
     return;
   }
 
-  ASSERT_SETUP(xTaskCreate((TaskFunction_t)this->receiver_task, "radio_recv",
-                           3 * 1024, this, 2, &(this->receiver_task_handle_)));
+  if (xTaskCreate((TaskFunction_t)this->receiver_task, "radio_recv", 3 * 1024,
+                  this, 2, &(this->receiver_task_handle_)) != pdPASS) {
+    ESP_LOGE(TAG, "Failed to create receiver task");
+    this->mark_failed();
+    return;
+  }
 
   ESP_LOGI(TAG, "Receiver task created [%p]", this->receiver_task_handle_);
 

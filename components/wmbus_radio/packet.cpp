@@ -20,12 +20,14 @@ Packet::Packet() { this->data_.reserve(WMBUS_PREAMBLE_SIZE); }
 
 // Determine the link mode based on the first byte of the data
 LinkMode Packet::link_mode() {
-  if (this->link_mode_ == LinkMode::UNKNOWN)
-    if (this->data_.size())
+  if (this->link_mode_ == LinkMode::UNKNOWN) {
+    if (this->data_.size()) {
       if (this->data_[0] == WMBUS_MODE_C_PREAMBLE)
         this->link_mode_ = LinkMode::C1;
       else
         this->link_mode_ = LinkMode::T1;
+    }
+  }
 
   return this->link_mode_;
 }
@@ -59,6 +61,8 @@ uint8_t Packet::l_field() {
     if (decoded)
       return (*decoded)[0];
   }
+  default:
+    break;
   }
   return 0;
 }
@@ -142,7 +146,12 @@ std::optional<Frame> Packet::convert_to_frame() {
              this->data_.size());
   }
 
-  removeAnyDLLCRCs(this->data_);
+  if (!removeAnyDLLCRCs(this->data_)) {
+    ESP_LOGW(TAG, "DLL CRC check failed, dropping corrupted frame (RSSI: %d dBm)",
+             this->rssi_);
+    delete this;
+    return frame;
+  }
   int dummy;
   if (checkWMBusFrame(this->data_, (size_t *)&dummy, &dummy, &dummy, false) ==
       FrameStatus::FullFrame)

@@ -1,5 +1,6 @@
 #include "cc1101_driver.h"
 #include "esphome/core/log.h"
+#include <inttypes.h>
 
 namespace esphome {
 namespace wmbus_radio {
@@ -16,7 +17,7 @@ static bool should_log_spi_ff_warning_() {
   if (now - last_warn_ms >= 1000) {
     last_warn_ms = now;
     if (suppressed > 0) {
-      ESP_LOGW(TAG, "suppressed %u repeated SPI 0xFF warnings", suppressed);
+      ESP_LOGW(TAG, "suppressed %" PRIu32 " repeated SPI 0xFF warnings", suppressed);
       suppressed = 0;
     }
     return true;
