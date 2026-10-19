@@ -2,6 +2,19 @@ Version 5 based on Kuba's dirty [fork](https://github.com/IoTLabs-pl/esphome-com
 
 Supports both CC1101 and SX1276 radio transceivers for wM-Bus reception.
 
+This fork (`enr0c/esphome-components`) adds:
+- Fixes for ESPHome 2026 compatibility
+- Corrected Format B CRC handling; frames failing the DLL CRC are dropped
+- Waterstarm and Sensostar drivers aligned with wmbusmeters.org / upstream `sensostar.xmq` (`status` instead of `current_status`, local-time `meter_datetime` and `history_N_date`)
+- Out-of-memory fixes (JSON building, `DVEntryMap`, `bin2hex`, heap vectors instead of VLAs in AES decryption) and packet bounds checks
+
+Documentation:
+- [Watermeter example (CC1101 + waterstarm/sensostar meters)](docs/Watermeter.md) with the config in [examples/watermeter.yaml](examples/watermeter.yaml)
+
+Notes:
+- Use `meter.as_json(false)` in `on_telegram` and keep the logger at `INFO` on memory-constrained ESP32 boards.
+- `wmbus_meter` sensors only publish when a telegram arrives; see the documentation for keeping last values in Home Assistant after a restart.
+
 Previous versions:
 [version 4](https://github.com/SzczepanLeon/esphome-components/tree/version_4)
 [version 3](https://github.com/SzczepanLeon/esphome-components/tree/version_3)
@@ -47,6 +60,10 @@ Previous versions:
 
 # Usage example:
 
+A complete, working real-world configuration (ESP32 + CC1101, five `waterstarm` water meters and one `sensostar` heat meter, single-line JSON logging, memory-friendly settings) is in [examples/watermeter.yaml](examples/watermeter.yaml). See [docs/Watermeter.md](docs/Watermeter.md) for details.
+
+The generic examples below use this fork as the component source.
+
 ## CC1101 Radio Configuration
 ```yaml
 esphome:
@@ -54,7 +71,7 @@ esphome:
   friendly_name: WMBus
 
 external_components:
-  - source: github://SzczepanLeon/esphome-components@main
+  - source: github://enr0c/esphome-components@main
 
 esp32:
   board: esp32dev
@@ -95,7 +112,7 @@ esphome:
     upload_speed: 921600
 
 external_components:
-  - source: github://SzczepanLeon/esphome-components@main
+  - source: github://enr0c/esphome-components@main
 
 esp32:
   board: heltec_wifi_lora_32_V2

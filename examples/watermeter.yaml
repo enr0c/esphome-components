@@ -1,0 +1,512 @@
+substitutions:
+  name: "watermeter"
+  friendly_name: watermeter
+
+esphome:
+  name: "${name}"
+  friendly_name: "${friendly_name}"
+  # Replace the placeholder meter IDs, names and keys with your own.
+  devices:
+    - id: lorenz_11111111_device
+      name: "Water meter 1"
+    - id: lorenz_22222222_device
+      name: "Cold water 2 22222222"
+    - id: lorenz_33333333_device
+      name: "Cold water 3 33333333"
+    - id: lorenz_44444444_device
+      name: "Hot water 4 44444444"
+    - id: lorenz_55555555_device
+      name: "Hot water 5 55555555"
+    - id: engelmann_66666666_device
+      name: "Underfloor heating 66666666"
+
+esp32:
+  board: esp32dev
+  toolchain: esp-idf
+  framework:
+    type: esp-idf
+    advanced:
+      loop_task_stack_size: 16384
+      minimum_chip_revision: "3.0"
+      sram1_as_iram: true
+
+logger:
+  level: INFO  # Set to DEBUG only to capture frame hex dumps (uses much more heap and log bandwidth)
+  tx_buffer_size: 2048
+  baud_rate: 115200
+  logs:
+    component: INFO
+    esp32: INFO
+    spi: INFO
+    app: INFO
+    wifi: INFO
+    wmbus_radio: INFO
+    cc1101: INFO
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    encryption:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: NONE          # Disable WiFi power saving for stability
+  fast_connect: true             # Skip scanning, connect directly
+  reboot_timeout: 5min
+
+  # Fallback hotspot in case wifi connection fails
+  ap:
+    ssid: "portal_${friendly_name}"
+    password: !secret esphome_ap_password
+
+time:
+  - platform: homeassistant
+
+button:
+  - platform: restart
+    id: "restart_button"
+    name: "restart_${friendly_name}"
+
+external_components:
+  - source: github://enr0c/esphome-components@main
+    components: [ wmbus_radio, wmbus_meter, wmbus_common ]
+    refresh: 0min
+
+# Wiring:
+# VCC   -> 3.3V
+# GND   -> GND
+# MOSI  -> GPIO19
+# S/CLK -> GPIO18
+# MISO  -> GPIO23
+# GDO2  -> GPIO27
+# GDO0  -> GPIO26
+# CSN   -> GPIO25
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO19
+  miso_pin: GPIO23
+
+wmbus_radio:
+  id: radio
+  radio_type: CC1101
+  cs_pin: GPIO25
+  gdo2_pin:
+    number: GPIO27
+    mode: INPUT_PULLDOWN
+  gdo0_pin: GPIO26
+  frequency: 868.95
+  on_frame:
+    - then:
+        - logger.log:
+            level: DEBUG
+            format: "RSSI: %ddBm T: %s (%d) %s"
+            args: [ frame->rssi(), frame->as_hex().c_str(), frame->data().size(), toString(frame->link_mode()) ]
+
+wmbus_common:
+  drivers:
+    - waterstarm
+    - sensostar
+
+wmbus_meter:
+  - id: lorenz_11111111
+    radio_id: radio
+    meter_id: 0x11111111
+    type: waterstarm
+    key: !secret lorenz_11111111
+    on_telegram:
+      then:
+        - logger.log:
+            level: INFO
+            format: "wmbus %s: %s"
+            args:
+              - meter.get_id().c_str()
+              - meter.as_json(false).c_str()
+  - id: lorenz_22222222
+    radio_id: radio
+    meter_id: 0x22222222
+    type: waterstarm
+    key: !secret lorenz_22222222
+    on_telegram:
+      then:
+        - logger.log:
+            level: INFO
+            format: "wmbus %s: %s"
+            args:
+              - meter.get_id().c_str()
+              - meter.as_json(false).c_str()
+  - id: lorenz_33333333
+    radio_id: radio
+    meter_id: 0x33333333
+    type: waterstarm
+    key: !secret lorenz_33333333
+    on_telegram:
+      then:
+        - logger.log:
+            level: INFO
+            format: "wmbus %s: %s"
+            args:
+              - meter.get_id().c_str()
+              - meter.as_json(false).c_str()
+  - id: lorenz_44444444
+    radio_id: radio
+    meter_id: 0x44444444
+    type: waterstarm
+    key: !secret lorenz_44444444
+    on_telegram:
+      then:
+        - logger.log:
+            level: INFO
+            format: "wmbus %s: %s"
+            args:
+              - meter.get_id().c_str()
+              - meter.as_json(false).c_str()
+  - id: lorenz_55555555
+    radio_id: radio
+    meter_id: 0x55555555
+    type: waterstarm
+    key: !secret lorenz_55555555
+    on_telegram:
+      then:
+        - logger.log:
+            level: INFO
+            format: "wmbus %s: %s"
+            args:
+              - meter.get_id().c_str()
+              - meter.as_json(false).c_str()
+  - id: engelmann_66666666
+    radio_id: radio
+    meter_id: 0x66666666
+    type: sensostar
+    key: !secret engelmann_66666666
+    on_telegram:
+      then:
+        - logger.log:
+            level: INFO
+            format: "wmbus %s: %s"
+            args:
+              - meter.get_id().c_str()
+              - meter.as_json(false).c_str()
+
+debug:
+  update_interval: 60s
+
+sensor:
+  - platform: debug
+    free:
+      name: "Heap Free"
+    block:
+      name: "Heap Largest Block"
+    loop_time:
+      name: "Loop Time"
+
+  # total water consumption
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+  - platform: wmbus_meter
+    parent_id: lorenz_22222222
+    device_id: lorenz_22222222_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+  - platform: wmbus_meter
+    parent_id: lorenz_33333333
+    device_id: lorenz_33333333_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+  - platform: wmbus_meter
+    parent_id: lorenz_44444444
+    device_id: lorenz_44444444_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+  - platform: wmbus_meter
+    parent_id: lorenz_55555555
+    device_id: lorenz_55555555_device
+    name: "total"
+    field: total_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+
+  # consumption at history 1 (last month)
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "consumption_at_history_1_m3"
+    field: consumption_at_history_1_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+  - platform: wmbus_meter
+    parent_id: lorenz_22222222
+    device_id: lorenz_22222222_device
+    name: "consumption_at_history_1_m3"
+    field: consumption_at_history_1_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+  - platform: wmbus_meter
+    parent_id: lorenz_33333333
+    device_id: lorenz_33333333_device
+    name: "consumption_at_history_1_m3"
+    field: consumption_at_history_1_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+  - platform: wmbus_meter
+    parent_id: lorenz_44444444
+    device_id: lorenz_44444444_device
+    name: "consumption_at_history_1_m3"
+    field: consumption_at_history_1_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+  - platform: wmbus_meter
+    parent_id: lorenz_55555555
+    device_id: lorenz_55555555_device
+    name: "consumption_at_history_1_m3"
+    field: consumption_at_history_1_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+
+  # battery voltage (diagnostic)
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22222222
+    device_id: lorenz_22222222_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_33333333
+    device_id: lorenz_33333333_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_44444444
+    device_id: lorenz_44444444_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_55555555
+    device_id: lorenz_55555555_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: engelmann_66666666
+    device_id: engelmann_66666666_device
+    name: "Battery"
+    field: battery_v
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    device_class: voltage
+    entity_category: diagnostic
+
+  # RSSI (diagnostic)
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_22222222
+    device_id: lorenz_22222222_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_33333333
+    device_id: lorenz_33333333_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_44444444
+    device_id: lorenz_44444444_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: lorenz_55555555
+    device_id: lorenz_55555555_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+  - platform: wmbus_meter
+    parent_id: engelmann_66666666
+    device_id: engelmann_66666666_device
+    name: "RSSI"
+    field: rssi_dbm
+    unit_of_measurement: "dBm"
+    entity_category: diagnostic
+
+  # heat meter specific measurements
+  - platform: wmbus_meter
+    parent_id: engelmann_66666666
+    device_id: engelmann_66666666_device
+    name: "total Energy"
+    field: total_kwh
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 0
+    state_class: total_increasing
+    device_class: energy
+  - platform: wmbus_meter
+    parent_id: engelmann_66666666
+    device_id: engelmann_66666666_device
+    name: "total Water"
+    field: total_water_m3
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    device_class: water
+    state_class: total_increasing
+
+text_sensor:
+  # status
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "status"
+    field: status
+  - platform: wmbus_meter
+    parent_id: lorenz_22222222
+    device_id: lorenz_22222222_device
+    name: "status"
+    field: status
+  - platform: wmbus_meter
+    parent_id: lorenz_33333333
+    device_id: lorenz_33333333_device
+    name: "status"
+    field: status
+  - platform: wmbus_meter
+    parent_id: lorenz_44444444
+    device_id: lorenz_44444444_device
+    name: "status"
+    field: status
+  - platform: wmbus_meter
+    parent_id: lorenz_55555555
+    device_id: lorenz_55555555_device
+    name: "status"
+    field: status
+  - platform: wmbus_meter
+    parent_id: engelmann_66666666
+    device_id: engelmann_66666666_device
+    name: "status"
+    field: status
+
+  # timestamp of the measurement
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "timestamp"
+    field: timestamp_zulu
+    device_class: timestamp
+  - platform: wmbus_meter
+    parent_id: lorenz_22222222
+    device_id: lorenz_22222222_device
+    name: "timestamp"
+    field: timestamp_zulu
+    device_class: timestamp
+  - platform: wmbus_meter
+    parent_id: lorenz_33333333
+    device_id: lorenz_33333333_device
+    name: "timestamp"
+    field: timestamp_zulu
+    device_class: timestamp
+  - platform: wmbus_meter
+    parent_id: lorenz_44444444
+    device_id: lorenz_44444444_device
+    name: "timestamp"
+    field: timestamp_zulu
+    device_class: timestamp
+  - platform: wmbus_meter
+    parent_id: lorenz_55555555
+    device_id: lorenz_55555555_device
+    name: "timestamp"
+    field: timestamp_zulu
+    device_class: timestamp
+  - platform: wmbus_meter
+    parent_id: engelmann_66666666
+    device_id: engelmann_66666666_device
+    name: "timestamp"
+    field: timestamp_zulu
+    device_class: timestamp
+
+  # dates (PointInTime values must be text sensors)
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "history_1_date"
+    field: history_1_date
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "set date raw"
+    field: set_date
+  - platform: wmbus_meter
+    parent_id: lorenz_11111111
+    device_id: lorenz_11111111_device
+    name: "meter_datetime"
+    field: meter_datetime
+  - platform: wmbus_meter
+    parent_id: lorenz_55555555
+    device_id: lorenz_55555555_device
+    name: "history_1_date"
+    field: history_1_date
