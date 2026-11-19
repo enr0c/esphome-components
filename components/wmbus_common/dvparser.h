@@ -385,6 +385,8 @@ struct DVEntryMap {
     entries_.clear();
   }
 
+  void reserve(size_t entries) { entries_.reserve(entries); }
+
   size_t size() const { return entries_.size(); }
 
   iterator begin() { return entries_.begin(); }
