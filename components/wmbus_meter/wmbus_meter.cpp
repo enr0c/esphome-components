@@ -1,4 +1,5 @@
 #include "wmbus_meter.h"
+#include <esp_heap_caps.h>
 #include "esphome/components/wmbus_common/meters_common_implementation.h"
 
 namespace esphome {
@@ -119,6 +120,11 @@ void Meter::handle_frame(wmbus_radio::Frame *frame) {
 std::string Meter::as_json(bool pretty_print) {
   if (this->meter == nullptr || this->last_telegram == nullptr)
     return "{}";
+  // An OOM exception aborts the firmware, so bail out early instead
+  if (heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 8192) {
+    ESP_LOGW(TAG, "Not enough free heap to build JSON, skipping");
+    return "{}";
+  }
   std::string json;
   this->meter->printMeter(this->last_telegram.get(), nullptr, nullptr, '\t',
                           &json, nullptr, nullptr, nullptr, pretty_print);
