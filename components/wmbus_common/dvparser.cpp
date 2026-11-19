@@ -190,13 +190,23 @@ bool parseDV(Telegram *t, std::vector<uchar> &databytes,
 #ifdef USE_ESP32
   // Parsing allocates many small objects and, when it fails with bad_alloc on
   // a nearly exhausted heap, even the exception allocation aborts the chip.
-  // Drop the telegram instead.
-  if (heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) < 8192) {
-    warning("(dvparser) low memory, dropping telegram (largest block %u, free %u)\n",
-            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_8BIT),
-            (unsigned) heap_caps_get_free_size(MALLOC_CAP_8BIT));
+  // Keep the existing 8 KiB parser headroom after reserving the entry array;
+  // parsing also allocates the per-entry keys, values, and VIF vectors.
+  const size_t entry_array_size =
+      sizeof(DVEntryMap::Entry) * DVEntryMap::MAX_ENTRIES;
+  const size_t minimum_parse_headroom = 8192;
+  const size_t required_largest_block =
+      entry_array_size + minimum_parse_headroom;
+  size_t largest_free_block = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (largest_free_block < required_largest_block) {
+    warning(
+        "(dvparser) low memory, dropping telegram (largest block %u, need %u, "
+        "free %u)\n",
+        (unsigned) largest_free_block, (unsigned) required_largest_block,
+        (unsigned) heap_caps_get_free_size(MALLOC_CAP_8BIT));
     return false;
   }
+  dv_entries->reserve(DVEntryMap::MAX_ENTRIES);
 #endif
   std::vector<uchar> format_bytes;
   std::vector<uchar> id_bytes;
