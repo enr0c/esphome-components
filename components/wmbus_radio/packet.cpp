@@ -3,7 +3,7 @@
 #include <ctime>
 
 #include "esphome/components/wmbus_common/meters.h"
-#include "esphome/core/helpers.h"
+#include "esphome/components/wmbus_common/util.h"
 
 #include "decode3of6.h"
 
@@ -181,7 +181,7 @@ int8_t Frame::rssi() { return this->rssi_; }
 std::string Frame::format() { return this->format_; }
 
 std::vector<uint8_t> Frame::as_raw() { return this->data_; }
-std::string Frame::as_hex() { return format_hex(this->data_); }
+std::string Frame::as_hex() { return bin2hex(this->data_); }
 std::string Frame::as_rtlwmbus() {
   const size_t time_repr_size = sizeof("YYYY-MM-DD HH:MM:SS.00Z");
   char time_buffer[time_repr_size];
