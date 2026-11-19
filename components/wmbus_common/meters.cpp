@@ -1233,7 +1233,6 @@ void MeterCommonImplementation::printMeter(
         founds; // Multiple dventries can match to a single field info.
     std::set<std::string> found_vnames;
 
-    s.reserve(2048);
     auto append_entry = [&](const std::string &entry) {
       s += indent;
       s += entry;
